@@ -3,1001 +3,1051 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Законодательная Энтропия</title>
+<title>ЗаконоМетр — Анализ НПА</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;400;600;700&family=Martian+Mono:wght@300;400;500&family=Noto+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 <style>
-  :root {
-    --bg: #080c10;
-    --surface: #0d1318;
-    --surface2: #111920;
-    --border: #1a2530;
-    --border2: #243040;
-    --accent: #00e5ff;
-    --accent2: #ff4d6d;
-    --accent3: #a0ff70;
-    --text: #c8d8e8;
-    --text-dim: #5a7080;
-    --text-bright: #eaf4ff;
-    --warn: #ffb347;
-    --mono: 'Martian Mono', monospace;
-    --display: 'Unbounded', sans-serif;
-    --body: 'Noto Sans', sans-serif;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--body); font-size: 14px; }
+:root {
+  --bg:#06080a;
+  --s1:#0b0f14;
+  --s2:#111820;
+  --s3:#18222e;
+  --bd:#1e2d3d;
+  --bd2:#2a3f55;
+  --txt:#b8ccd8;
+  --txtb:#e8f4ff;
+  --txtd:#4a6070;
+  --cyan:#00d4ff;
+  --red:#ff3d5a;
+  --gold:#f5a623;
+  --green:#3ddc84;
+  --purple:#b06aff;
+  --mono:'IBM Plex Mono',monospace;
+  --sans:'IBM Plex Sans',sans-serif;
+  --display:'Bebas Neue',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--txt);font-family:var(--sans);font-size:14px;overflow:hidden}
 
-  /* Scanline overlay */
-  body::before {
-    content: '';
-    position: fixed; inset: 0;
-    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,229,255,0.015) 2px, rgba(0,229,255,0.015) 4px);
-    pointer-events: none; z-index: 9999;
-  }
+/* Grid noise texture */
+body::after{content:'';position:fixed;inset:0;background-image:radial-gradient(circle at 1px 1px, rgba(0,212,255,0.04) 1px, transparent 0);background-size:32px 32px;pointer-events:none;z-index:0}
 
-  /* Layout */
-  .shell { display: grid; grid-template-columns: 260px 1fr; grid-template-rows: 56px 1fr; height: 100vh; }
+.app{display:grid;grid-template-columns:280px 1fr;grid-template-rows:52px 1fr;height:100vh;position:relative;z-index:1}
 
-  /* Topbar */
-  .topbar {
-    grid-column: 1/-1;
-    display: flex; align-items: center; gap: 20px;
-    padding: 0 24px;
-    border-bottom: 1px solid var(--border);
-    background: var(--surface);
-    position: relative;
-  }
-  .topbar::after {
-    content: '';
-    position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
-    background: linear-gradient(90deg, transparent, var(--accent), transparent);
-    opacity: 0.4;
-  }
-  .logo { font-family: var(--display); font-size: 12px; font-weight: 700; color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase; }
-  .logo span { color: var(--text-dim); font-weight: 300; }
-  .tagline { font-family: var(--mono); font-size: 10px; color: var(--text-dim); }
-  .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
-  .api-badge { font-family: var(--mono); font-size: 10px; padding: 4px 10px; border-radius: 3px; border: 1px solid var(--border2); color: var(--text-dim); }
-  .api-badge.live { border-color: var(--accent3); color: var(--accent3); }
+/* ── TOPBAR ── */
+.topbar{
+  grid-column:1/-1;
+  display:flex;align-items:center;gap:0;
+  background:var(--s1);border-bottom:1px solid var(--bd);
+  position:relative;overflow:hidden;
+}
+.topbar::before{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent 0%,var(--cyan) 30%,var(--purple) 70%,transparent 100%);opacity:0.5}
+.brand{
+  padding:0 20px 0 24px;display:flex;align-items:center;gap:12px;
+  border-right:1px solid var(--bd);height:100%;
+}
+.brand-logo{font-family:var(--display);font-size:22px;color:var(--cyan);letter-spacing:0.05em;line-height:1}
+.brand-sub{font-family:var(--mono);font-size:9px;color:var(--txtd);letter-spacing:0.2em;text-transform:uppercase;margin-top:2px}
+.topbar-mid{flex:1;display:flex;align-items:center;gap:8px;padding:0 20px}
+.provider-pills{display:flex;gap:6px}
+.pill{
+  padding:4px 12px;border-radius:2px;font-family:var(--mono);font-size:10px;
+  border:1px solid var(--bd2);color:var(--txtd);cursor:pointer;transition:all .15s;
+  background:transparent;
+}
+.pill:hover{border-color:var(--cyan);color:var(--cyan)}
+.pill.active{background:rgba(0,212,255,.1);border-color:var(--cyan);color:var(--cyan)}
+.pill.free::after{content:'FREE';font-size:7px;margin-left:4px;color:var(--green);vertical-align:super}
+.pill.mock::after{content:'DEMO';font-size:7px;margin-left:4px;color:var(--gold);vertical-align:super}
+.topbar-right{display:flex;align-items:center;gap:10px;padding:0 16px}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--txtd);transition:all .3s}
+.status-dot.live{background:var(--green);box-shadow:0 0 8px var(--green)}
+.status-dot.mock{background:var(--gold);box-shadow:0 0 6px var(--gold)}
+.status-txt{font-family:var(--mono);font-size:10px;color:var(--txtd)}
 
-  /* Sidebar */
-  .sidebar {
-    background: var(--surface);
-    border-right: 1px solid var(--border);
-    display: flex; flex-direction: column;
-    overflow: hidden;
-  }
-  .sidebar-section { padding: 16px; border-bottom: 1px solid var(--border); }
-  .sidebar-label { font-family: var(--mono); font-size: 9px; color: var(--text-dim); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 10px; }
+/* ── SIDEBAR ── */
+.sidebar{background:var(--s1);border-right:1px solid var(--bd);display:flex;flex-direction:column;overflow:hidden}
+.sb-block{padding:14px 16px;border-bottom:1px solid var(--bd)}
+.sb-label{font-family:var(--mono);font-size:9px;color:var(--txtd);letter-spacing:.15em;text-transform:uppercase;margin-bottom:8px}
 
-  /* API Key input */
-  .api-input-wrap { position: relative; }
-  .api-input {
-    width: 100%; padding: 8px 36px 8px 10px;
-    background: var(--bg); border: 1px solid var(--border2);
-    border-radius: 4px; color: var(--text); font-family: var(--mono); font-size: 11px;
-    outline: none; transition: border-color 0.2s;
-  }
-  .api-input:focus { border-color: var(--accent); }
-  .api-input::placeholder { color: var(--text-dim); }
-  .api-eye { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--text-dim); font-size: 14px; }
+/* Key input */
+.key-row{display:flex;gap:6px;align-items:center}
+.key-input{
+  flex:1;padding:7px 10px;background:var(--bg);border:1px solid var(--bd2);
+  border-radius:3px;color:var(--txt);font-family:var(--mono);font-size:11px;outline:none;
+}
+.key-input:focus{border-color:var(--cyan)}
+.key-input::placeholder{color:var(--txtd)}
+.key-btn{
+  padding:7px 10px;background:transparent;border:1px solid var(--bd2);
+  border-radius:3px;color:var(--txtd);cursor:pointer;font-size:12px;transition:all .15s;
+}
+.key-btn:hover{border-color:var(--cyan);color:var(--cyan)}
 
-  /* Document upload */
-  .doc-list { display: flex; flex-direction: column; gap: 6px; max-height: 200px; overflow-y: auto; }
-  .doc-item {
-    display: flex; align-items: center; gap: 8px;
-    padding: 7px 10px; background: var(--surface2);
-    border: 1px solid var(--border); border-radius: 4px;
-    font-size: 11px; color: var(--text);
-  }
-  .doc-icon { font-size: 14px; flex-shrink: 0; }
-  .doc-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--mono); font-size: 10px; }
-  .doc-del { color: var(--text-dim); cursor: pointer; font-size: 12px; flex-shrink: 0; }
-  .doc-del:hover { color: var(--accent2); }
+/* Docs */
+.doc-list{display:flex;flex-direction:column;gap:5px;max-height:160px;overflow-y:auto;margin-bottom:8px}
+.doc-row{
+  display:flex;align-items:center;gap:8px;padding:6px 10px;
+  background:var(--s2);border:1px solid var(--bd);border-radius:3px;
+}
+.doc-name{flex:1;font-family:var(--mono);font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--txt)}
+.doc-del{color:var(--txtd);cursor:pointer;font-size:11px;flex-shrink:0;transition:color .15s}
+.doc-del:hover{color:var(--red)}
+.dropzone{
+  border:1px dashed var(--bd2);border-radius:4px;padding:14px;
+  text-align:center;cursor:pointer;position:relative;
+  color:var(--txtd);font-size:11px;font-family:var(--mono);
+  transition:all .2s;
+}
+.dropzone:hover,.dropzone.drag{border-color:var(--cyan);color:var(--cyan)}
+.dropzone input{position:absolute;inset:0;opacity:0;cursor:pointer}
 
-  .drop-zone {
-    border: 1px dashed var(--border2); border-radius: 6px;
-    padding: 16px; text-align: center; cursor: pointer;
-    color: var(--text-dim); font-size: 11px; transition: all 0.2s;
-    position: relative;
-  }
-  .drop-zone:hover, .drop-zone.drag { border-color: var(--accent); color: var(--accent); }
-  .drop-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-  .drop-zone-icon { font-size: 22px; margin-bottom: 6px; }
+/* Nav */
+.nav{padding:10px 10px;display:flex;flex-direction:column;gap:2px}
+.nitem{
+  display:flex;align-items:center;gap:10px;padding:9px 12px;
+  border-radius:3px;cursor:pointer;font-size:12px;color:var(--txtd);
+  border:1px solid transparent;transition:all .15s;position:relative;
+}
+.nitem:hover{background:var(--s2);color:var(--txt)}
+.nitem.active{background:rgba(0,212,255,.07);border-color:rgba(0,212,255,.2);color:var(--cyan)}
+.nitem.active::before{content:'';position:absolute;left:0;top:8px;bottom:8px;width:2px;background:var(--cyan);border-radius:0 2px 2px 0}
+.ni-icon{width:18px;text-align:center;font-size:15px;flex-shrink:0}
+.ni-badge{margin-left:auto;font-family:var(--mono);font-size:8px;padding:2px 7px;border-radius:10px}
+.ni-badge.red{background:rgba(255,61,90,.2);color:var(--red)}
+.ni-badge.gold{background:rgba(245,166,35,.2);color:var(--gold)}
 
-  /* Nav tabs */
-  .nav { display: flex; flex-direction: column; gap: 2px; padding: 12px 10px; }
-  .nav-item {
-    display: flex; align-items: center; gap: 10px;
-    padding: 9px 12px; border-radius: 5px;
-    font-size: 12px; color: var(--text-dim); cursor: pointer;
-    transition: all 0.15s; border: 1px solid transparent;
-    font-family: var(--body);
-  }
-  .nav-item:hover { background: var(--surface2); color: var(--text); }
-  .nav-item.active { background: rgba(0,229,255,0.08); border-color: rgba(0,229,255,0.2); color: var(--accent); }
-  .nav-icon { font-size: 16px; width: 20px; text-align: center; }
-  .nav-badge { margin-left: auto; font-family: var(--mono); font-size: 9px; padding: 2px 6px; background: rgba(255,77,109,0.2); color: var(--accent2); border-radius: 10px; }
+/* Sidebar bottom */
+.sb-footer{margin-top:auto;padding:12px 16px;border-top:1px solid var(--bd)}
+.demo-btn{
+  width:100%;padding:9px;background:rgba(245,166,35,.08);border:1px solid rgba(245,166,35,.3);
+  border-radius:3px;color:var(--gold);font-family:var(--mono);font-size:10px;cursor:pointer;
+  transition:all .15s;text-align:center;
+}
+.demo-btn:hover{background:rgba(245,166,35,.15)}
 
-  /* Main area */
-  .main { overflow-y: auto; display: flex; flex-direction: column; }
-  .panel { display: none; flex-direction: column; flex: 1; }
-  .panel.active { display: flex; }
-  .panel-header { padding: 24px 28px 0; }
-  .panel-title { font-family: var(--display); font-size: 18px; font-weight: 600; color: var(--text-bright); margin-bottom: 4px; }
-  .panel-sub { font-size: 12px; color: var(--text-dim); font-family: var(--mono); }
-  .panel-body { padding: 20px 28px; flex: 1; }
+/* ── MAIN ── */
+.main{overflow:hidden;display:flex;flex-direction:column;background:var(--bg)}
+.panel{display:none;flex-direction:column;height:100%;overflow:hidden}
+.panel.active{display:flex}
+.ph{padding:20px 24px 0;flex-shrink:0}
+.ph-title{font-family:var(--display);font-size:28px;color:var(--txtb);letter-spacing:.04em;line-height:1}
+.ph-sub{font-family:var(--mono);font-size:10px;color:var(--txtd);margin-top:4px;letter-spacing:.08em}
+.pb{padding:16px 24px;flex:1;overflow-y:auto}
 
-  /* Buttons */
-  .btn {
-    display: inline-flex; align-items: center; gap: 8px;
-    padding: 9px 18px; border-radius: 4px; border: none;
-    font-family: var(--mono); font-size: 11px; cursor: pointer;
-    transition: all 0.15s; letter-spacing: 0.05em;
-  }
-  .btn-primary { background: var(--accent); color: #000; font-weight: 500; }
-  .btn-primary:hover { background: #33ecff; }
-  .btn-primary:disabled { background: var(--border2); color: var(--text-dim); cursor: not-allowed; }
-  .btn-ghost { background: transparent; border: 1px solid var(--border2); color: var(--text); }
-  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
-  .btn-danger { background: rgba(255,77,109,0.15); border: 1px solid rgba(255,77,109,0.3); color: var(--accent2); }
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.stat{background:var(--s1);border:1px solid var(--bd);border-radius:4px;padding:12px 14px}
+.stat-n{font-family:var(--display);font-size:28px;letter-spacing:.02em;line-height:1;color:var(--txtb)}
+.stat-n.r{color:var(--red)} .stat-n.g{color:var(--gold)} .stat-n.c{color:var(--cyan)} .stat-n.gr{color:var(--green)}
+.stat-l{font-family:var(--mono);font-size:8px;color:var(--txtd);text-transform:uppercase;letter-spacing:.12em;margin-top:4px}
 
-  /* Analysis controls */
-  .analysis-bar { display: flex; gap: 10px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
-  .mode-select {
-    padding: 8px 12px; background: var(--surface2); border: 1px solid var(--border2);
-    border-radius: 4px; color: var(--text); font-family: var(--mono); font-size: 11px;
-    outline: none; cursor: pointer;
-  }
-  .mode-select:focus { border-color: var(--accent); }
+/* Controls bar */
+.cbar{display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.sel{
+  padding:8px 12px;background:var(--s1);border:1px solid var(--bd2);
+  border-radius:3px;color:var(--txt);font-family:var(--mono);font-size:11px;outline:none;cursor:pointer;
+}
+.sel:focus{border-color:var(--cyan)}
+.btn{
+  display:inline-flex;align-items:center;gap:7px;padding:8px 16px;
+  border-radius:3px;border:none;font-family:var(--mono);font-size:11px;
+  cursor:pointer;transition:all .15s;letter-spacing:.04em;
+}
+.btn-c{background:var(--cyan);color:#000;font-weight:500}
+.btn-c:hover{background:#33dcff}
+.btn-c:disabled{background:var(--bd2);color:var(--txtd);cursor:not-allowed}
+.btn-g{background:transparent;border:1px solid var(--bd2);color:var(--txt)}
+.btn-g:hover{border-color:var(--cyan);color:var(--cyan)}
 
-  /* Results grid */
-  .results-grid { display: flex; flex-direction: column; gap: 12px; }
-  .result-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 6px; overflow: hidden;
-    transition: border-color 0.2s;
-  }
-  .result-card:hover { border-color: var(--border2); }
-  .result-card-header { display: flex; align-items: center; gap: 12px; padding: 14px 16px; cursor: pointer; }
-  .severity-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-  .sev-high { background: var(--accent2); box-shadow: 0 0 8px var(--accent2); }
-  .sev-med { background: var(--warn); }
-  .sev-low { background: var(--accent3); }
-  .result-title { flex: 1; font-size: 13px; color: var(--text-bright); }
-  .result-type { font-family: var(--mono); font-size: 9px; padding: 3px 8px; border-radius: 3px; }
-  .type-conflict { background: rgba(255,77,109,0.15); color: var(--accent2); }
-  .type-obsolete { background: rgba(255,179,71,0.15); color: var(--warn); }
-  .type-link { background: rgba(160,255,112,0.12); color: var(--accent3); }
-  .result-body { padding: 0 16px 14px; border-top: 1px solid var(--border); display: none; }
-  .result-body.open { display: block; padding-top: 12px; }
-  .result-text { line-height: 1.7; color: var(--text); font-size: 13px; }
-  .result-articles { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
-  .article-chip {
-    font-family: var(--mono); font-size: 10px; padding: 4px 10px;
-    background: var(--surface2); border: 1px solid var(--border2);
-    border-radius: 3px; color: var(--text-dim);
-  }
+/* Result cards */
+.rlist{display:flex;flex-direction:column;gap:10px}
+.rcard{background:var(--s1);border:1px solid var(--bd);border-radius:4px;overflow:hidden;transition:border-color .2s}
+.rcard:hover{border-color:var(--bd2)}
+.rcard-head{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer}
+.sev{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.sev.h{background:var(--red);box-shadow:0 0 6px var(--red)}
+.sev.m{background:var(--gold)}
+.sev.l{background:var(--green)}
+.rtitle{flex:1;font-size:13px;color:var(--txtb);font-weight:500}
+.rtag{font-family:var(--mono);font-size:8px;padding:3px 8px;border-radius:2px;letter-spacing:.06em;flex-shrink:0}
+.rtag.conflict{background:rgba(255,61,90,.15);color:var(--red)}
+.rtag.obsolete{background:rgba(245,166,35,.15);color:var(--gold)}
+.rtag.link{background:rgba(0,212,255,.1);color:var(--cyan)}
+.rtag.risk{background:rgba(176,106,255,.15);color:var(--purple)}
+.rtoggle{color:var(--txtd);font-size:12px;transition:transform .2s;flex-shrink:0}
+.rtoggle.open{transform:rotate(180deg)}
+.rbody{padding:0 14px;max-height:0;overflow:hidden;transition:max-height .3s ease,padding .2s}
+.rbody.open{max-height:300px;padding:12px 14px}
+.rdesc{line-height:1.7;color:var(--txt);font-size:13px}
+.rrec{margin-top:8px;font-family:var(--mono);font-size:11px;color:var(--green);padding:8px 10px;background:rgba(61,220,132,.05);border-left:2px solid var(--green);border-radius:0 3px 3px 0}
+.rchips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.rchip{font-family:var(--mono);font-size:9px;padding:3px 8px;background:var(--s2);border:1px solid var(--bd);border-radius:2px;color:var(--txtd)}
 
-  /* Loader */
-  .loader-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 60px; }
-  .loader-ring {
-    width: 40px; height: 40px; border: 2px solid var(--border2);
-    border-top-color: var(--accent); border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .loader-text { font-family: var(--mono); font-size: 11px; color: var(--text-dim); }
-  .loader-step { font-family: var(--mono); font-size: 10px; color: var(--accent); opacity: 0.7; }
+/* Loader */
+.loader{display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:60px;flex:1}
+.loader.show{display:flex}
+.lring{width:36px;height:36px;border:2px solid var(--bd2);border-top-color:var(--cyan);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ltxt{font-family:var(--mono);font-size:11px;color:var(--txtd)}
+.lstep{font-family:var(--mono);font-size:10px;color:var(--cyan);opacity:.8;min-height:16px}
 
-  /* Empty state */
-  .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 60px; opacity: 0.5; }
-  .empty-icon { font-size: 40px; }
-  .empty-text { font-family: var(--mono); font-size: 12px; color: var(--text-dim); text-align: center; }
+/* Empty */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:60px;color:var(--txtd)}
+.empty-icon{font-size:38px;opacity:.4}
+.empty-txt{font-family:var(--mono);font-size:11px;text-align:center;line-height:1.6}
 
-  /* Chat panel */
-  .chat-messages { display: flex; flex-direction: column; gap: 14px; margin-bottom: 16px; max-height: 420px; overflow-y: auto; }
-  .msg { display: flex; gap: 12px; align-items: flex-start; }
-  .msg-avatar { width: 30px; height: 30px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
-  .msg-user .msg-avatar { background: rgba(0,229,255,0.15); }
-  .msg-ai .msg-avatar { background: rgba(160,255,112,0.15); }
-  .msg-bubble { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 10px 14px; font-size: 13px; line-height: 1.7; max-width: 600px; }
-  .msg-user { flex-direction: row-reverse; }
-  .msg-user .msg-bubble { background: rgba(0,229,255,0.05); border-color: rgba(0,229,255,0.2); }
-  .chat-input-row { display: flex; gap: 10px; }
-  .chat-input {
-    flex: 1; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border2);
-    border-radius: 5px; color: var(--text); font-family: var(--body); font-size: 13px; outline: none;
-    resize: none; min-height: 42px; max-height: 120px;
-  }
-  .chat-input:focus { border-color: var(--accent); }
+/* Chat */
+.chat-wrap{display:flex;flex-direction:column;height:100%}
+.cmsg-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:12px;padding:16px 24px}
+.cmsg{display:flex;gap:10px;align-items:flex-start}
+.cav{width:28px;height:28px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;border:1px solid var(--bd)}
+.cmsg.user .cav{background:rgba(0,212,255,.1);border-color:rgba(0,212,255,.2)}
+.cmsg.ai .cav{background:rgba(61,220,132,.08);border-color:rgba(61,220,132,.2)}
+.cbubble{background:var(--s1);border:1px solid var(--bd);border-radius:4px;padding:10px 14px;font-size:13px;line-height:1.7;max-width:680px}
+.cmsg.user{flex-direction:row-reverse}
+.cmsg.user .cbubble{background:rgba(0,212,255,.05);border-color:rgba(0,212,255,.15)}
+.cinput-bar{padding:12px 24px;border-top:1px solid var(--bd);display:flex;gap:8px;flex-shrink:0}
+.cinput{
+  flex:1;padding:10px 14px;background:var(--s1);border:1px solid var(--bd2);
+  border-radius:4px;color:var(--txt);font-family:var(--sans);font-size:13px;
+  outline:none;resize:none;min-height:42px;max-height:100px;
+}
+.cinput:focus{border-color:var(--cyan)}
+.thinking{display:flex;gap:4px;align-items:center;padding:2px 0}
+.thinking span{width:5px;height:5px;border-radius:50%;background:var(--green);animation:blink 1.2s infinite}
+.thinking span:nth-child(2){animation-delay:.2s}
+.thinking span:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:1}}
 
-  /* Graph panel */
-  #graph-svg { width: 100%; height: 480px; background: var(--surface); border-radius: 8px; border: 1px solid var(--border); }
-  .graph-controls { display: flex; gap: 10px; margin-bottom: 14px; align-items: center; }
-  .graph-legend { display: flex; gap: 16px; margin-left: auto; }
-  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-dim); font-family: var(--mono); }
-  .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+/* Obsolete table */
+.obs-wrap{overflow-x:auto}
+.otable{width:100%;border-collapse:collapse}
+.otable th{text-align:left;font-family:var(--mono);font-size:8px;color:var(--txtd);letter-spacing:.12em;text-transform:uppercase;padding:8px 12px;border-bottom:1px solid var(--bd);white-space:nowrap}
+.otable td{padding:10px 12px;border-bottom:1px solid var(--bd);font-size:12px;vertical-align:top}
+.otable tr:hover td{background:var(--s2)}
+.ostat{font-family:var(--mono);font-size:8px;padding:3px 8px;border-radius:2px;white-space:nowrap}
+.ostat.replaced{background:rgba(255,61,90,.15);color:var(--red)}
+.ostat.partial{background:rgba(245,166,35,.15);color:var(--gold)}
+.ostat.review{background:rgba(0,212,255,.1);color:var(--cyan)}
 
-  /* Stats row */
-  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
-  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 14px 16px; }
-  .stat-val { font-family: var(--display); font-size: 24px; font-weight: 600; color: var(--text-bright); }
-  .stat-val.red { color: var(--accent2); }
-  .stat-val.yellow { color: var(--warn); }
-  .stat-val.green { color: var(--accent3); }
-  .stat-label { font-family: var(--mono); font-size: 9px; color: var(--text-dim); margin-top: 4px; letter-spacing: 0.1em; text-transform: uppercase; }
+/* Graph */
+#gsvg{width:100%;height:100%;background:var(--s1);border-radius:4px;border:1px solid var(--bd)}
+.graph-wrap{flex:1;position:relative;min-height:0;padding:0 24px 16px}
+.glegend{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px}
+.gli{display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;color:var(--txtd)}
+.gldot{width:9px;height:9px;border-radius:50%}
 
-  /* Obsolete panel */
-  .obs-table { width: 100%; border-collapse: collapse; }
-  .obs-table th { text-align: left; font-family: var(--mono); font-size: 9px; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; padding: 8px 12px; border-bottom: 1px solid var(--border); }
-  .obs-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 12px; vertical-align: top; }
-  .obs-table tr:hover td { background: var(--surface2); }
-  .obs-status { font-family: var(--mono); font-size: 9px; padding: 3px 8px; border-radius: 3px; }
-  .obs-replaced { background: rgba(255,77,109,0.12); color: var(--accent2); }
-  .obs-partial { background: rgba(255,179,71,0.12); color: var(--warn); }
-  .obs-review { background: rgba(0,229,255,0.08); color: var(--accent); }
+/* Toast */
+.toast{position:fixed;bottom:16px;right:16px;z-index:999;padding:10px 16px;border-radius:4px;font-family:var(--mono);font-size:11px;background:var(--s2);border:1px solid var(--bd2);color:var(--txt);transform:translateY(60px);opacity:0;transition:all .25s}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.err{border-color:var(--red);color:var(--red)}
+.toast.ok{border-color:var(--green);color:var(--green)}
+.toast.warn{border-color:var(--gold);color:var(--gold)}
 
-  /* Toast */
-  .toast {
-    position: fixed; bottom: 20px; right: 20px; z-index: 9998;
-    background: var(--surface); border: 1px solid var(--border2);
-    border-radius: 6px; padding: 12px 18px;
-    font-family: var(--mono); font-size: 11px; color: var(--text);
-    transform: translateY(80px); opacity: 0; transition: all 0.3s;
-  }
-  .toast.show { transform: translateY(0); opacity: 1; }
-  .toast.error { border-color: var(--accent2); color: var(--accent2); }
-  .toast.success { border-color: var(--accent3); color: var(--accent3); }
+/* Provider config modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;display:none;align-items:center;justify-content:center}
+.modal-bg.show{display:flex}
+.modal{background:var(--s1);border:1px solid var(--bd2);border-radius:6px;padding:24px;width:480px;max-width:95vw}
+.modal-title{font-family:var(--display);font-size:22px;color:var(--txtb);margin-bottom:4px}
+.modal-sub{font-family:var(--mono);font-size:10px;color:var(--txtd);margin-bottom:20px}
+.mfield{margin-bottom:14px}
+.mfield label{display:block;font-family:var(--mono);font-size:9px;color:var(--txtd);letter-spacing:.12em;text-transform:uppercase;margin-bottom:5px}
+.mfield input{width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--bd2);border-radius:3px;color:var(--txt);font-family:var(--mono);font-size:12px;outline:none}
+.mfield input:focus{border-color:var(--cyan)}
+.mrow{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
+.minfo{background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.2);border-radius:3px;padding:10px 12px;font-family:var(--mono);font-size:10px;color:var(--cyan);line-height:1.7;margin-bottom:14px}
 
-  /* Scrollbars */
-  ::-webkit-scrollbar { width: 4px; height: 4px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
-  ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
-
-  .thinking { display: flex; gap: 4px; align-items: center; padding: 10px 14px; }
-  .thinking span { width: 6px; height: 6px; background: var(--accent3); border-radius: 50%; animation: blink 1.2s infinite; }
-  .thinking span:nth-child(2) { animation-delay: 0.2s; }
-  .thinking span:nth-child(3) { animation-delay: 0.4s; }
-  @keyframes blink { 0%,80%,100%{opacity:0.2} 40%{opacity:1} }
-
-  .streaming-text { white-space: pre-wrap; }
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:2px}
+::-webkit-scrollbar-thumb:hover{background:var(--cyan)}
 </style>
 </head>
 <body>
-<div class="shell">
+<div class="app">
 
-  <!-- TOPBAR -->
-  <header class="topbar">
-    <div class="logo">Законодательная <span>Энтропия</span></div>
-    <div class="tagline">// AI-анализ нормативных документов</div>
-    <div class="topbar-right">
-      <div class="api-badge" id="api-status">API: не подключён</div>
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="brand">
+    <div>
+      <div class="brand-logo">ЗаконоМетр</div>
+      <div class="brand-sub">NPA Conflict Analyzer v2.0</div>
     </div>
-  </header>
-
-  <!-- SIDEBAR -->
-  <aside class="sidebar">
-    <!-- API Key -->
-    <div class="sidebar-section">
-      <div class="sidebar-label">Anthropic API Key</div>
-      <div class="api-input-wrap">
-        <input type="password" class="api-input" id="api-key-input" placeholder="sk-ant-..." autocomplete="off">
-        <span class="api-eye" onclick="toggleApiVisibility()">👁</span>
-      </div>
+  </div>
+  <div class="topbar-mid">
+    <div class="provider-pills">
+      <button class="pill mock active" id="pill-mock" onclick="setProvider('mock')">Мок-режим</button>
+      <button class="pill free" id="pill-gemini" onclick="openProviderModal('gemini')">Gemini</button>
+      <button class="pill free" id="pill-groq" onclick="openProviderModal('groq')">Groq</button>
+      <button class="pill" id="pill-anthropic" onclick="openProviderModal('anthropic')">Claude</button>
+      <button class="pill" id="pill-openai" onclick="openProviderModal('openai')">OpenAI</button>
     </div>
+  </div>
+  <div class="topbar-right">
+    <div class="status-dot mock" id="status-dot"></div>
+    <div class="status-txt" id="status-txt">Мок-режим</div>
+  </div>
+</header>
 
-    <!-- Document upload -->
-    <div class="sidebar-section">
-      <div class="sidebar-label">Документы</div>
-      <div class="doc-list" id="doc-list"></div>
-      <div style="margin-top: 8px;">
-        <div class="drop-zone" id="drop-zone">
-          <input type="file" id="file-input" multiple accept=".txt,.pdf,.doc,.docx">
-          <div class="drop-zone-icon">📄</div>
-          <div>Перетащите или нажмите</div>
-          <div style="font-size: 10px; margin-top: 2px;">.txt, .pdf, .docx</div>
-        </div>
-      </div>
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sb-block">
+    <div class="sb-label">Документы ({{ state.docs.length }})</div>
+    <div class="doc-list" id="doc-list"></div>
+    <div class="dropzone" id="dropzone">
+      <input type="file" id="file-input" multiple accept=".txt,.pdf,.docx,.doc">
+      <div style="font-size:18px;margin-bottom:4px">📄</div>
+      <div>Перетащите или нажмите</div>
+      <div style="font-size:10px;margin-top:2px;color:var(--txtd)">.txt · .pdf · .docx</div>
     </div>
+  </div>
 
-    <!-- Navigation -->
-    <div class="nav">
-      <div class="sidebar-label" style="padding: 0 2px;">Модули</div>
-      <div class="nav-item active" onclick="switchPanel('analysis')">
-        <span class="nav-icon">⚡</span> Анализ противоречий
-        <span class="nav-badge" id="conflict-badge" style="display:none">0</span>
-      </div>
-      <div class="nav-item" onclick="switchPanel('graph')">
-        <span class="nav-icon">🕸</span> Граф связей
-      </div>
-      <div class="nav-item" onclick="switchPanel('obsolete')">
-        <span class="nav-icon">🗂</span> Устаревшие нормы
-        <span class="nav-badge" id="obs-badge" style="display:none">0</span>
-      </div>
-      <div class="nav-item" onclick="switchPanel('chat')">
-        <span class="nav-icon">💬</span> Чат с документами
-      </div>
+  <div class="nav">
+    <div class="sb-label" style="padding:0 2px">Модули анализа</div>
+    <div class="nitem active" id="nav-conflicts" onclick="switchPanel('conflicts',this)">
+      <span class="ni-icon">⚡</span> Противоречия
+      <span class="ni-badge red" id="badge-conflicts" style="display:none">0</span>
     </div>
-  </aside>
-
-  <!-- MAIN -->
-  <main class="main">
-
-    <!-- ANALYSIS PANEL -->
-    <div class="panel active" id="panel-analysis">
-      <div class="panel-header">
-        <div class="panel-title">Анализ противоречий</div>
-        <div class="panel-sub">// Поиск конфликтующих норм между загруженными документами</div>
-      </div>
-      <div class="panel-body">
-        <div class="stats-row" id="stats-row" style="display:none">
-          <div class="stat-card">
-            <div class="stat-val red" id="stat-conflicts">0</div>
-            <div class="stat-label">Противоречий</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-val yellow" id="stat-obsolete">0</div>
-            <div class="stat-label">Устаревших норм</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-val green" id="stat-links">0</div>
-            <div class="stat-label">Связей найдено</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-val" id="stat-docs">0</div>
-            <div class="stat-label">Документов</div>
-          </div>
-        </div>
-
-        <div class="analysis-bar">
-          <select class="mode-select" id="analysis-mode">
-            <option value="conflicts">Противоречия между нормами</option>
-            <option value="obsolete">Устаревшие положения</option>
-            <option value="links">Связи между НПА</option>
-            <option value="full">Полный анализ</option>
-          </select>
-          <button class="btn btn-primary" id="run-btn" onclick="runAnalysis()">▶ Запустить анализ</button>
-          <button class="btn btn-ghost" onclick="clearResults()">✕ Очистить</button>
-        </div>
-
-        <div id="results-area">
-          <div class="empty-state" id="empty-state">
-            <div class="empty-icon">📋</div>
-            <div class="empty-text">Загрузите документы и нажмите «Запустить анализ»<br>или используйте демо-данные ниже</div>
-            <button class="btn btn-ghost" style="margin-top:8px" onclick="loadDemo()">📦 Загрузить демо-данные</button>
-          </div>
-          <div class="loader-wrap" id="loader" style="display:none">
-            <div class="loader-ring"></div>
-            <div class="loader-text">Анализ документов...</div>
-            <div class="loader-step" id="loader-step">Отправка запроса к Claude API</div>
-          </div>
-          <div class="results-grid" id="results-list"></div>
-        </div>
-      </div>
+    <div class="nitem" id="nav-obsolete" onclick="switchPanel('obsolete',this)">
+      <span class="ni-icon">🗂</span> Устаревшие нормы
+      <span class="ni-badge gold" id="badge-obsolete" style="display:none">0</span>
     </div>
+    <div class="nitem" id="nav-graph" onclick="switchPanel('graph',this)">
+      <span class="ni-icon">🕸</span> Граф связей
+    </div>
+    <div class="nitem" id="nav-chat" onclick="switchPanel('chat',this)">
+      <span class="ni-icon">💬</span> Чат с документами
+    </div>
+  </div>
 
-    <!-- GRAPH PANEL -->
-    <div class="panel" id="panel-graph">
-      <div class="panel-header">
-        <div class="panel-title">Граф связей между НПА</div>
-        <div class="panel-sub">// Интерактивная визуализация ссылок между нормативными документами</div>
+  <div class="sb-footer">
+    <button class="demo-btn" onclick="loadDemo()">⚡ Загрузить демо-данные</button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- CONFLICTS PANEL -->
+  <div class="panel active" id="panel-conflicts">
+    <div class="ph">
+      <div class="ph-title">Анализ противоречий</div>
+      <div class="ph-sub">// Поиск конфликтующих и несовместимых норм между документами</div>
+    </div>
+    <div class="pb">
+      <div class="stats" id="stats" style="display:none">
+        <div class="stat"><div class="stat-n r" id="st-c">0</div><div class="stat-l">Противоречий</div></div>
+        <div class="stat"><div class="stat-n g" id="st-o">0</div><div class="stat-l">Устаревших</div></div>
+        <div class="stat"><div class="stat-n c" id="st-l">0</div><div class="stat-l">Связей</div></div>
+        <div class="stat"><div class="stat-n gr" id="st-d">0</div><div class="stat-l">Документов</div></div>
       </div>
-      <div class="panel-body">
-        <div class="graph-controls">
-          <button class="btn btn-primary" onclick="buildGraph()">🕸 Построить граф</button>
-          <button class="btn btn-ghost" onclick="resetGraph()">↺ Сбросить</button>
-          <div class="graph-legend">
-            <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div>Закон</div>
-            <div class="legend-item"><div class="legend-dot" style="background:var(--accent2)"></div>Конфликт</div>
-            <div class="legend-item"><div class="legend-dot" style="background:var(--warn)"></div>Постановление</div>
-            <div class="legend-item"><div class="legend-dot" style="background:var(--accent3)"></div>Приказ</div>
-          </div>
-        </div>
-        <svg id="graph-svg"></svg>
-        <div id="graph-info" style="margin-top:12px;font-family:var(--mono);font-size:11px;color:var(--text-dim);min-height:30px"></div>
+      <div class="cbar">
+        <select class="sel" id="mode-sel">
+          <option value="full">Полный анализ</option>
+          <option value="conflicts">Только противоречия</option>
+          <option value="obsolete">Только устаревшие</option>
+          <option value="risk">Правовые риски</option>
+        </select>
+        <button class="btn btn-c" id="run-btn" onclick="runConflicts()">▶ Запустить</button>
+        <button class="btn btn-g" onclick="clearConflicts()">✕ Очистить</button>
+      </div>
+      <div id="conflicts-empty" class="empty">
+        <div class="empty-icon">📋</div>
+        <div class="empty-txt">Загрузите документы и запустите анализ<br>или нажмите «Загрузить демо-данные» в боковой панели</div>
+      </div>
+      <div id="conflicts-loader" class="loader">
+        <div class="lring"></div>
+        <div class="ltxt">Анализируем документы...</div>
+        <div class="lstep" id="lstep">Подготовка запроса</div>
+      </div>
+      <div class="rlist" id="rlist"></div>
+    </div>
+  </div>
+
+  <!-- OBSOLETE PANEL -->
+  <div class="panel" id="panel-obsolete">
+    <div class="ph">
+      <div class="ph-title">Устаревшие нормы</div>
+      <div class="ph-sub">// Положения требующие обновления, отмены или пересмотра</div>
+    </div>
+    <div class="pb">
+      <div class="cbar">
+        <button class="btn btn-c" id="obs-run-btn" onclick="runObsolete()">🔍 Найти устаревшие</button>
+        <button class="btn btn-g" onclick="clearObs()">✕ Очистить</button>
+      </div>
+      <div id="obs-empty" class="empty">
+        <div class="empty-icon">🗂</div>
+        <div class="empty-txt">Запустите поиск устаревших норм</div>
+      </div>
+      <div id="obs-loader" class="loader">
+        <div class="lring"></div>
+        <div class="ltxt">Ищем устаревшие нормы...</div>
+        <div class="lstep">Анализ дат и ссылок</div>
+      </div>
+      <div class="obs-wrap" id="obs-wrap" style="display:none">
+        <table class="otable" id="obs-table">
+          <thead><tr><th>Норма / Пункт</th><th>Документ</th><th>Проблема</th><th>Статус</th><th>Рекомендация</th></tr></thead>
+          <tbody id="obs-body"></tbody>
+        </table>
       </div>
     </div>
+  </div>
 
-    <!-- OBSOLETE PANEL -->
-    <div class="panel" id="panel-obsolete">
-      <div class="panel-header">
-        <div class="panel-title">Устаревшие нормы</div>
-        <div class="panel-sub">// Положения, требующие пересмотра или отмены</div>
+  <!-- GRAPH PANEL -->
+  <div class="panel" id="panel-graph">
+    <div class="ph">
+      <div class="ph-title">Граф связей НПА</div>
+      <div class="ph-sub">// Интерактивная карта зависимостей между нормативными актами</div>
+    </div>
+    <div class="pb" style="display:flex;flex-direction:column;min-height:0;height:calc(100vh - 120px)">
+      <div class="cbar">
+        <button class="btn btn-c" onclick="buildGraph()">🕸 Построить граф</button>
+        <button class="btn btn-g" onclick="resetGraph()">↺ Сбросить</button>
+        <div class="glegend" style="margin:0 0 0 8px">
+          <div class="gli"><div class="gldot" style="background:var(--cyan)"></div>Закон</div>
+          <div class="gli"><div class="gldot" style="background:var(--gold)"></div>Постановление</div>
+          <div class="gli"><div class="gldot" style="background:var(--green)"></div>Приказ</div>
+          <div class="gli"><div class="gldot" style="background:var(--red)"></div>Конфликт</div>
+        </div>
       </div>
-      <div class="panel-body">
-        <div class="analysis-bar">
-          <button class="btn btn-primary" onclick="runObsolete()">🔍 Найти устаревшие</button>
+      <div style="flex:1;min-height:0">
+        <svg id="gsvg"></svg>
+      </div>
+      <div id="ginfo" style="font-family:var(--mono);font-size:10px;color:var(--txtd);margin-top:8px;min-height:16px"></div>
+    </div>
+  </div>
+
+  <!-- CHAT PANEL -->
+  <div class="panel" id="panel-chat">
+    <div class="chat-wrap">
+      <div class="ph" style="padding-bottom:12px">
+        <div class="ph-title">Чат с документами</div>
+        <div class="ph-sub">// Задавайте вопросы напрямую по загруженным НПА</div>
+      </div>
+      <div class="cmsg-list" id="cmsg-list">
+        <div class="cmsg ai">
+          <div class="cav">⚖</div>
+          <div class="cbubble">Привет! Загрузите документы и задайте любой вопрос по нормативным актам. Я найду противоречия, объясню нормы и помогу разобраться в связях между законами.</div>
         </div>
-        <div id="obs-area">
-          <div class="empty-state" id="obs-empty">
-            <div class="empty-icon">🗂</div>
-            <div class="empty-text">Запустите поиск устаревших норм</div>
-          </div>
-          <div class="loader-wrap" id="obs-loader" style="display:none">
-            <div class="loader-ring"></div>
-            <div class="loader-text">Поиск устаревших норм...</div>
-          </div>
-          <table class="obs-table" id="obs-table" style="display:none">
-            <thead>
-              <tr>
-                <th>Норма / Статья</th>
-                <th>Документ</th>
-                <th>Проблема</th>
-                <th>Статус</th>
-              </tr>
-            </thead>
-            <tbody id="obs-tbody"></tbody>
-          </table>
-        </div>
+      </div>
+      <div class="cinput-bar">
+        <textarea class="cinput" id="cinput" placeholder="Задайте вопрос по документам... (Enter — отправить)" rows="1" onkeydown="chatKey(event)"></textarea>
+        <button class="btn btn-c" onclick="sendChat()" style="align-self:flex-end;padding:10px 16px">→</button>
       </div>
     </div>
+  </div>
 
-    <!-- CHAT PANEL -->
-    <div class="panel" id="panel-chat">
-      <div class="panel-header">
-        <div class="panel-title">Чат с документами</div>
-        <div class="panel-sub">// Задавайте вопросы по загруженным нормативным актам</div>
-      </div>
-      <div class="panel-body" style="display:flex;flex-direction:column;height:calc(100vh - 180px)">
-        <div class="chat-messages" id="chat-messages" style="flex:1"></div>
-        <div class="chat-input-row">
-          <textarea class="chat-input" id="chat-input" placeholder="Задайте вопрос по документам... (Enter — отправить, Shift+Enter — перенос)" rows="1" onkeydown="chatKeydown(event)"></textarea>
-          <button class="btn btn-primary" onclick="sendChat()" style="align-self:flex-end">→</button>
-        </div>
-      </div>
+</main>
+</div>
+
+<!-- PROVIDER MODAL -->
+<div class="modal-bg" id="modal-bg" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">Настройка провайдера</div>
+    <div class="modal-sub" id="modal-sub">Введите API ключ для подключения</div>
+    <div class="minfo" id="modal-info"></div>
+    <div class="mfield">
+      <label>API Ключ</label>
+      <input type="password" id="modal-key" placeholder="Введите ключ...">
     </div>
-
-  </main>
+    <div class="mrow">
+      <button class="btn btn-g" onclick="closeModal()">Отмена</button>
+      <button class="btn btn-c" onclick="saveProvider()">Подключить</button>
+    </div>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-// ===== STATE =====
-const state = {
+// ─── STATE ───
+const S = {
+  provider: 'mock',
+  keys: {},
   docs: [],
-  results: [],
-  obsResults: [],
-  chatHistory: [],
-  graphData: null,
+  conflicts: [],
+  obsData: [],
+  chat: [],
+  currentModal: null,
 };
 
-// ===== API KEY =====
-let apiKeyVisible = false;
-function toggleApiVisibility() {
-  const input = document.getElementById('api-key-input');
-  apiKeyVisible = !apiKeyVisible;
-  input.type = apiKeyVisible ? 'text' : 'password';
-}
-function getApiKey() {
-  return document.getElementById('api-key-input').value.trim();
-}
-document.getElementById('api-key-input').addEventListener('input', function() {
-  const badge = document.getElementById('api-status');
-  if (this.value.startsWith('sk-ant-')) {
-    badge.textContent = 'API: подключён';
-    badge.className = 'api-badge live';
-  } else {
-    badge.textContent = 'API: не подключён';
-    badge.className = 'api-badge';
-  }
-});
+// ─── PROVIDER CONFIG ───
+const PROVIDERS = {
+  mock: { name: 'Мок-режим', free: true },
+  gemini: {
+    name: 'Google Gemini',
+    free: true,
+    info: '🆓 Бесплатно: 1500 запросов/день\nПолучить ключ: aistudio.google.com/app/apikey\nМодель: gemini-2.5-flash',
+    placeholder: 'AIza...',
+  },
+  groq: {
+    name: 'Groq (llama3)',
+    free: true,
+    info: '🆓 Бесплатно: 14 400 запросов/день, очень быстро\nПолучить ключ: console.groq.com/keys\nМодель: llama-3.1-70b-versatile',
+    placeholder: 'gsk_...',
+  },
+  anthropic: {
+    name: 'Anthropic Claude',
+    info: '💳 Платный, $5 кредиты при регистрации\nПолучить ключ: console.anthropic.com\nМодель: claude-sonnet-4-20250514',
+    placeholder: 'sk-ant-...',
+  },
+  openai: {
+    name: 'OpenAI GPT-4',
+    info: '💳 Платный, $5 кредиты при регистрации\nПолучить ключ: platform.openai.com/api-keys\nМодель: gpt-4o-mini',
+    placeholder: 'sk-...',
+  },
+};
 
-// ===== NAVIGATION =====
-function switchPanel(name) {
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById('panel-' + name).classList.add('active');
-  event.currentTarget.classList.add('active');
+function setProvider(p) {
+  S.provider = p;
+  document.querySelectorAll('.pill').forEach(el => el.classList.remove('active'));
+  document.getElementById('pill-' + p).classList.add('active');
+  const dot = document.getElementById('status-dot');
+  const txt = document.getElementById('status-txt');
+  if (p === 'mock') { dot.className = 'status-dot mock'; txt.textContent = 'Мок-режим'; }
+  else { dot.className = 'status-dot live'; txt.textContent = PROVIDERS[p].name; }
 }
 
-// ===== FILE HANDLING =====
-const dropZone = document.getElementById('drop-zone');
-const fileInput = document.getElementById('file-input');
+function openProviderModal(p) {
+  S.currentModal = p;
+  const pr = PROVIDERS[p];
+  document.getElementById('modal-title').textContent = pr.name;
+  document.getElementById('modal-sub').textContent = 'Введите API ключ для подключения';
+  document.getElementById('modal-info').style.whiteSpace = 'pre-line';
+  document.getElementById('modal-info').textContent = pr.info || '';
+  document.getElementById('modal-key').placeholder = pr.placeholder || 'Ключ...';
+  document.getElementById('modal-key').value = S.keys[p] || '';
+  document.getElementById('modal-bg').classList.add('show');
+  setTimeout(() => document.getElementById('modal-key').focus(), 100);
+}
+function closeModal() { document.getElementById('modal-bg').classList.remove('show'); }
+function saveProvider() {
+  const key = document.getElementById('modal-key').value.trim();
+  if (!key) { toast('Введите API ключ', 'err'); return; }
+  S.keys[S.currentModal] = key;
+  setProvider(S.currentModal);
+  closeModal();
+  toast(PROVIDERS[S.currentModal].name + ' подключён', 'ok');
+}
 
-dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag'); });
-dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag'));
-dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('drag'); handleFiles(e.dataTransfer.files); });
-fileInput.addEventListener('change', e => handleFiles(e.target.files));
+// ─── FILES ───
+const dz = document.getElementById('dropzone');
+const fi = document.getElementById('file-input');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
+dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('drag'); handleFiles(e.dataTransfer.files); });
+fi.addEventListener('change', e => handleFiles(e.target.files));
 
 async function handleFiles(files) {
-  for (const file of files) {
-    const text = await readFile(file);
-    state.docs.push({ name: file.name, text, size: file.size });
+  for (const f of files) {
+    const txt = await f.text();
+    S.docs.push({ name: f.name, text: txt });
   }
-  renderDocList();
-  updateStatDocs();
-  showToast(`Загружено файлов: ${files.length}`, 'success');
+  renderDocs();
+  toast(`Загружено: ${files.length} файл(ов)`, 'ok');
 }
-
-function readFile(file) {
-  return new Promise(resolve => {
-    const reader = new FileReader();
-    reader.onload = e => resolve(e.target.result);
-    reader.readAsText(file, 'utf-8');
-  });
-}
-
-function renderDocList() {
-  const list = document.getElementById('doc-list');
-  list.innerHTML = state.docs.map((d, i) => `
-    <div class="doc-item">
-      <span class="doc-icon">📄</span>
+function removeDoc(i) { S.docs.splice(i, 1); renderDocs(); }
+function renderDocs() {
+  document.getElementById('doc-list').innerHTML = S.docs.map((d, i) => `
+    <div class="doc-row">
+      <span style="font-size:13px">📄</span>
       <span class="doc-name" title="${d.name}">${d.name}</span>
       <span class="doc-del" onclick="removeDoc(${i})">✕</span>
-    </div>
-  `).join('');
+    </div>`).join('');
+  document.getElementById('st-d').textContent = S.docs.length;
+  document.getElementById('stats').style.display = S.docs.length ? 'grid' : 'none';
 }
 
-function removeDoc(i) {
-  state.docs.splice(i, 1);
-  renderDocList();
-  updateStatDocs();
-}
-
-function updateStatDocs() {
-  document.getElementById('stat-docs').textContent = state.docs.length;
-}
-
-// ===== DEMO DATA =====
+// ─── DEMO DATA ───
 function loadDemo() {
-  state.docs = [
-    {
-      name: 'Закон_о_труде_2020.txt',
-      text: `ЗАКОН О ТРУДЕ (2020)
+  S.docs = [
+    { name: 'Закон_о_труде_РК_2020.txt', text: `ТРУДОВОЙ КОДЕКС РЕСПУБЛИКИ КАЗАХСТАН (2020)
+
 Статья 45. Продолжительность рабочего времени
-Нормальная продолжительность рабочего времени не может превышать 40 часов в неделю.
+Нормальная продолжительность рабочего времени не может превышать 40 часов в неделю для всех работников независимо от формы собственности организации.
+
 Статья 46. Сверхурочная работа
-Сверхурочная работа оплачивается в размере не менее 1.5 кратного часового тарифа за первые два часа и двойного — за последующие. Привлечение работника к сверхурочной работе допускается с его письменного согласия.
-Статья 78. Минимальный отпуск
-Ежегодный оплачиваемый отпуск предоставляется работнику продолжительностью не менее 24 календарных дней.
-Статья 112. Ответственность работодателя
-Работодатель несёт ответственность за нарушение трудового законодательства в соответствии с Кодексом об административных правонарушениях.`,
-    },
-    {
-      name: 'Постановление_Минтруда_2018.txt',
-      text: `ПОСТАНОВЛЕНИЕ МИНИСТЕРСТВА ТРУДА №156 (2018)
-Пункт 3. О рабочем времени
-Продолжительность рабочей недели для отдельных категорий работников государственного сектора устанавливается в 36 часов.
-Пункт 7. Оплата переработки
+Сверхурочная работа оплачивается в размере не менее полуторного часового тарифа за первые два часа работы и двойного часового тарифа за последующие часы. Привлечение работника к сверхурочной работе допускается только с его письменного согласия.
+
+Статья 78. Ежегодный оплачиваемый отпуск
+Работникам предоставляется ежегодный оплачиваемый трудовой отпуск продолжительностью не менее 24 календарных дней.
+
+Статья 112. Административная ответственность работодателя
+Работодатель несёт ответственность за нарушение трудового законодательства согласно Кодексу РК об административных правонарушениях статьи 87-92.
+
+Статья 134. Охрана труда
+Работодатель обязан обеспечить работников средствами индивидуальной защиты согласно утверждённым нормам. Инструктаж по охране труда проводится по форме ОТ-1/2019.` },
+    { name: 'Постановление_Минтруда_№156_2018.txt', text: `ПОСТАНОВЛЕНИЕ МИНИСТЕРСТВА ТРУДА И СОЦИАЛЬНОЙ ЗАЩИТЫ №156 (принято 2018, действует)
+
+Пункт 3. Рабочее время государственных служащих
+Продолжительность рабочей недели для работников государственного сектора устанавливается в размере 36 часов.
+
+Пункт 7. Оплата сверхурочной работы
 Работа сверх установленной нормы оплачивается в однократном размере тарифной ставки вне зависимости от количества часов переработки.
+
 Пункт 12. Ежегодный отпуск
-Работникам предоставляется ежегодный отпуск продолжительностью 18 рабочих дней.
-Пункт 15. Дисциплинарная ответственность
-Дисциплинарные взыскания применяются согласно внутреннему распорядку организации без согласования с профсоюзом.`,
-    },
-    {
-      name: 'Приказ_Минфин_2022.txt',
-      text: `ПРИКАЗ МИНИСТЕРСТВА ФИНАНСОВ №89 (2022)
-Раздел 2. Компенсации работникам
-Размер компенсации за неиспользованный отпуск рассчитывается исходя из 18-дневной нормы отпуска.
-Раздел 4. Налогообложение сверхурочных
-Сверхурочные выплаты подлежат налогообложению по стандартной ставке подоходного налога.
-Раздел 6. Отчётность
-Работодатели обязаны подавать ежеквартальную отчётность о переработках в Министерство финансов согласно форме утверждённой в 2015 году (Форма ПТ-3/2015, утратившая силу с 01.01.2021).`,
-    },
+Работникам государственного сектора предоставляется ежегодный оплачиваемый отпуск продолжительностью 18 рабочих дней.
+
+Пункт 15. Взыскания
+Дисциплинарные взыскания применяются согласно внутреннему распорядку организации без обязательного согласования с профсоюзом.
+
+Пункт 22. Инструктаж по охране труда
+Инструктаж проводится по унифицированной форме ОТ-1/2012 (утверждена приказом МТ №45 от 2012 года).` },
+    { name: 'Приказ_Минфин_№89_2022.txt', text: `ПРИКАЗ МИНИСТЕРСТВА ФИНАНСОВ №89 (2022)
+
+Раздел 2. Компенсации за неиспользованный отпуск
+Размер компенсации за неиспользованный отпуск рассчитывается исходя из 18-дневной нормы ежегодного отпуска.
+
+Раздел 4. Налогообложение сверхурочных выплат
+Сверхурочные выплаты облагаются индивидуальным подоходным налогом по стандартной ставке 10%. Расчёт осуществляется по форме налоговой отчётности 200.00.
+
+Раздел 6. Обязательная отчётность
+Работодатели обязаны подавать ежеквартальную отчётность о переработках в уполномоченный орган согласно форме ПТ-3/2015 (утратила силу с 01.01.2021 согласно Приказу МФ №12 от 2020 года).
+
+Раздел 8. Социальные отчисления
+Расчёт социальных отчислений производится согласно Закону РК «Об обязательном социальном страховании» от 2003 года (утратил силу, заменён законом 2019 года).` },
   ];
-  renderDocList();
-  updateStatDocs();
-  document.getElementById('stats-row').style.display = 'grid';
-  showToast('Демо-данные загружены: 3 документа', 'success');
+  renderDocs();
+  document.getElementById('stats').style.display = 'grid';
+  toast('Демо-данные загружены: 3 документа', 'ok');
 }
 
-// ===== ANALYSIS =====
-async function runAnalysis() {
-  if (!getApiKey()) { showToast('Введите API-ключ Anthropic', 'error'); return; }
-  if (state.docs.length < 2) { showToast('Загрузите минимум 2 документа', 'error'); return; }
+// ─── LLM CALL ───
+async function callLLM(prompt) {
+  const p = S.provider;
 
-  const mode = document.getElementById('analysis-mode').value;
-  document.getElementById('empty-state').style.display = 'none';
-  document.getElementById('loader').style.display = 'flex';
-  document.getElementById('results-list').innerHTML = '';
-  document.getElementById('stats-row').style.display = 'grid';
-  document.getElementById('run-btn').disabled = true;
+  if (p === 'mock') return mockResponse(prompt);
 
-  const steps = ['Препроцессинг документов...', 'Отправка в Claude API...', 'Анализ норм...', 'Формирование отчёта...'];
-  let si = 0;
-  const stepInterval = setInterval(() => {
-    document.getElementById('loader-step').textContent = steps[si++ % steps.length];
-  }, 1500);
+  const key = S.keys[p];
+  if (!key) throw new Error(`Нет ключа для ${PROVIDERS[p].name}. Нажмите на провайдер вверху.`);
 
-  const docsText = state.docs.map((d, i) => `=== Документ ${i+1}: ${d.name} ===\n${d.text.slice(0, 3000)}`).join('\n\n');
-
-  const prompts = {
-    conflicts: `Ты — эксперт по анализу нормативно-правовых актов. Проанализируй следующие документы и найди ВСЕ противоречия, конфликты и несоответствия между нормами.
-
-${docsText}
-
-Верни ТОЛЬКО JSON-массив (без markdown, без \`\`\`), где каждый элемент:
-{
-  "type": "conflict",
-  "severity": "high|medium|low",
-  "title": "краткое название противоречия",
-  "description": "подробное объяснение на русском (2-4 предложения)",
-  "articles": ["Документ 1, Статья X", "Документ 2, Пункт Y"],
-  "recommendation": "рекомендация по устранению"
-}`,
-    obsolete: `Ты — эксперт по нормативному праву. Проанализируй документы и найди устаревшие нормы, ссылки на недействующие акты, устаревшие формы и процедуры.
-
-${docsText}
-
-Верни ТОЛЬКО JSON-массив, где каждый элемент:
-{
-  "type": "obsolete",
-  "severity": "high|medium|low",
-  "title": "название устаревшего положения",
-  "description": "почему это положение устарело",
-  "articles": ["источник"],
-  "recommendation": "что нужно обновить"
-}`,
-    links: `Ты — эксперт по нормативному праву. Проанализируй документы и найди все связи, ссылки и зависимости между нормами разных документов.
-
-${docsText}
-
-Верни ТОЛЬКО JSON-массив, где каждый элемент:
-{
-  "type": "link",
-  "severity": "low",
-  "title": "связь между нормами",
-  "description": "как эти нормы связаны между собой",
-  "articles": ["Документ 1, Статья X", "Документ 2, Пункт Y"],
-  "recommendation": "необходимые уточнения"
-}`,
-    full: `Ты — эксперт по анализу нормативно-правовых актов. Проведи комплексный анализ следующих документов: найди противоречия, устаревшие нормы и связи между НПА.
-
-${docsText}
-
-Верни ТОЛЬКО JSON-массив (без markdown, без \`\`\`), где каждый элемент:
-{
-  "type": "conflict|obsolete|link",
-  "severity": "high|medium|low",
-  "title": "краткое название (до 80 символов)",
-  "description": "подробное объяснение на русском (2-4 предложения)",
-  "articles": ["ссылка1", "ссылка2"],
-  "recommendation": "рекомендация"
-}
-Найди минимум 5-8 значимых проблем.`,
-  };
-
-  try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+  if (p === 'gemini') {
+    const isJson = prompt.includes('Верни ТОЛЬКО JSON');
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        messages: [{ role: 'user', content: prompts[mode] }],
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { maxOutputTokens: 4096, ...(isJson ? { responseMimeType: 'application/json' } : {}) },
       }),
     });
-
-    clearInterval(stepInterval);
-    const data = await response.json();
-
-    if (!response.ok) throw new Error(data.error?.message || 'API error');
-
-    const text = data.content.map(b => b.text || '').join('');
-    let results = [];
-    try {
-      const clean = text.replace(/```json|```/g, '').trim();
-      results = JSON.parse(clean);
-    } catch(e) {
-      const match = text.match(/\[[\s\S]*\]/);
-      if (match) results = JSON.parse(match[0]);
-      else throw new Error('Не удалось разобрать ответ');
-    }
-
-    state.results = results;
-    renderResults(results);
-    updateStats(results);
-    document.getElementById('loader').style.display = 'none';
-    showToast(`Анализ завершён: ${results.length} результатов`, 'success');
-
-  } catch(e) {
-    clearInterval(stepInterval);
-    document.getElementById('loader').style.display = 'none';
-    document.getElementById('empty-state').style.display = 'flex';
-    showToast('Ошибка: ' + e.message, 'error');
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error?.message || 'Gemini error');
+    return d.candidates[0].content.parts[0].text;
   }
 
+  if (p === 'groq') {
+    const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+      body: JSON.stringify({ model: 'llama-3.1-70b-versatile', max_tokens: 2048, messages: [{ role: 'user', content: prompt }] }),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error?.message || 'Groq error');
+    return d.choices[0].message.content;
+  }
+
+  if (p === 'anthropic') {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1000, messages: [{ role: 'user', content: prompt }] }),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error?.message || 'Anthropic error');
+    return d.content.map(b => b.text || '').join('');
+  }
+
+  if (p === 'openai') {
+    const r = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+      body: JSON.stringify({ model: 'gpt-4o-mini', max_tokens: 2048, messages: [{ role: 'user', content: prompt }] }),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error?.message || 'OpenAI error');
+    return d.choices[0].message.content;
+  }
+}
+
+function parseJSON(text) {
+  let clean = text.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+  // direct parse
+  try { return JSON.parse(clean); } catch {}
+  // extract [...] array
+  const arrM = clean.match(/\[[\s\S]*\]/);
+  if (arrM) { try { return JSON.parse(arrM[0]); } catch { try { return JSON.parse(arrM[0].replace(/,\s*([\]}])/g, "$1")); } catch {} } }
+  // extract {...} object (for graph)
+  const objM = clean.match(/\{[\s\S]*\}/);
+  if (objM) { try { return JSON.parse(objM[0]); } catch { try { return JSON.parse(objM[0].replace(/,\s*([\]}])/g, "$1")); } catch {} } }
+  // fix trailing commas and retry
+  const fixed = clean.replace(/,\s*([\]}])/g, "$1");
+  try { return JSON.parse(fixed); } catch {}
+  throw new Error('Не удалось разобрать JSON ответ. Попробуйте ещё раз.');
+}
+
+// ─── MOCK RESPONSE ───
+function mockResponse(prompt) {
+  if (prompt.includes('противоречия') || prompt.includes('АНАЛИЗ')) {
+    return JSON.stringify([
+      { type:'conflict', severity:'high', title:'Конфликт норм о сверхурочной оплате', description:'Трудовой кодекс (ст. 46) требует оплату сверхурочных в размере 1.5× за первые 2 часа и 2× за последующие. Постановление №156 (п. 7) устанавливает единую ставку 1× вне зависимости от количества часов. Это прямое противоречие — нижестоящий акт ухудшает положение работника по сравнению с Кодексом.', articles:['Закон о труде, Ст. 46','Постановление №156, П. 7'], recommendation:'Привести Постановление №156 в соответствие с ТК РК. Норма Кодекса как вышестоящего акта имеет приоритет.' },
+      { type:'conflict', severity:'high', title:'Несоответствие в нормах ежегодного отпуска', description:'Трудовой кодекс устанавливает минимум 24 календарных дня отпуска (ст. 78). Постановление №156 (п. 12) устанавливает только 18 рабочих дней для госсектора. Приказ Минфин №89 рассчитывает компенсации исходя из 18 дней. Фактически работники госсектора лишаются части законного отпуска.', articles:['Закон о труде, Ст. 78','Постановление №156, П. 12','Приказ Минфин №89, Раздел 2'], recommendation:'Пересмотреть нормы отпуска в Постановлении. Пересчитать компенсации в Приказе Минфин.' },
+      { type:'obsolete', severity:'high', title:'Ссылка на утратившую силу форму ПТ-3/2015', description:'Приказ Минфин №89 (Раздел 6) обязывает использовать форму отчётности ПТ-3/2015, которая утратила силу с 01.01.2021. Это создаёт правовую неопределённость — работодатели не имеют актуальной формы для отчётности о переработках.', articles:['Приказ Минфин №89, Раздел 6'], recommendation:'Обновить ссылку на действующую форму отчётности или разработать новую.' },
+      { type:'obsolete', severity:'high', title:'Ссылка на закон об ОСС 2003 года (утратил силу)', description:'Приказ Минфин (Раздел 8) ссылается на Закон РК «Об обязательном социальном страховании» 2003 года, который заменён новым законом 2019 года. Расчёты социальных отчислений могут вестись по устаревшим нормативам.', articles:['Приказ Минфин №89, Раздел 8'], recommendation:'Заменить ссылку на действующий Закон РК об ОСС 2019 года.' },
+      { type:'conflict', severity:'medium', title:'Разные формы инструктажа по охране труда', description:'Трудовой кодекс (ст. 134) ссылается на форму ОТ-1/2019 для инструктажа, тогда как Постановление №156 (п. 22) предписывает использовать устаревшую форму ОТ-1/2012. Работодатели оказываются в ситуации двусмысленности.', articles:['Закон о труде, Ст. 134','Постановление №156, П. 22'], recommendation:'Актуализировать ссылки на нормативные формы. Издать разъяснительное письмо.' },
+      { type:'link', severity:'low', title:'Взаимосвязь норм об административной ответственности', description:'Трудовой кодекс (ст. 112) предусматривает ответственность по ст. 87-92 КоАП, тогда как Постановление №156 (п. 15) допускает взыскания без согласования с профсоюзом. Возникает вопрос о применимости профсоюзных норм в госсекторе.', articles:['Закон о труде, Ст. 112','Постановление №156, П. 15'], recommendation:'Уточнить применимость требования о согласовании с профсоюзом в госсекторе.' },
+    ]);
+  }
+  if (prompt.includes('устаревш') || prompt.includes('obsolete')) {
+    return JSON.stringify([
+      { norm:'Форма ПТ-3/2015 (обязательная отчётность)', doc:'Приказ Минфин №89, Раздел 6', issue:'Форма утратила силу с 01.01.2021 (Приказ МФ №12 от 2020 г.), однако ссылка на неё сохраняется в действующем документе', status:'replaced', recommendation:'Использовать актуальную форму или запросить разъяснение в Минфин' },
+      { norm:'Закон об ОСС 2003 года', doc:'Приказ Минфин №89, Раздел 8', issue:'Закон полностью заменён новым Законом РК об обязательном социальном страховании 2019 года с изменёнными ставками', status:'replaced', recommendation:'Обновить ссылку на закон 2019 года, пересчитать нормативы' },
+      { norm:'Форма ОТ-1/2012 (инструктаж по ОТ)', doc:'Постановление №156, П. 22', issue:'Устаревшая форма инструктажа по охране труда. Действующий кодекс ссылается на форму ОТ-1/2019', status:'replaced', recommendation:'Перейти на форму ОТ-1/2019 согласно требованиям ТК' },
+      { norm:'18 рабочих дней отпуска для госсектора', doc:'Постановление №156, П. 12', issue:'Норма не соответствует требованиям ТК РК о минимуме 24 календарных дней. Требует пересмотра', status:'partial', recommendation:'Привести в соответствие с нормами ТК, перейти на исчисление в календарных днях' },
+      { norm:'Единая ставка 1× для сверхурочных', doc:'Постановление №156, П. 7', issue:'Противоречит требованиям ТК о дифференцированной оплате сверхурочных (1.5× и 2×)', status:'review', recommendation:'Пересмотреть нормы оплаты труда в Постановлении' },
+    ]);
+  }
+  if (prompt.includes('граф') || prompt.includes('graph')) {
+    return JSON.stringify({
+      nodes: [
+        { id:'n0', label:'Трудовой кодекс РК', type:'law' },
+        { id:'n1', label:'Постановление МТ №156', type:'decree' },
+        { id:'n2', label:'Приказ Минфин №89', type:'order' },
+        { id:'n3', label:'КоАП РК', type:'law' },
+        { id:'n4', label:'Закон об ОСС 2019', type:'law' },
+      ],
+      links: [
+        { source:'n0', target:'n1', label:'противоречит', conflict:true },
+        { source:'n0', target:'n3', label:'ссылается', conflict:false },
+        { source:'n1', target:'n2', label:'конфликт отпуск', conflict:true },
+        { source:'n2', target:'n4', label:'устарела ссылка', conflict:true },
+        { source:'n0', target:'n2', label:'регулирует', conflict:false },
+      ],
+    });
+  }
+  // chat fallback
+  return 'На основе загруженных документов: обнаружены противоречия между Трудовым кодексом и Постановлением №156 в части оплаты сверхурочных (ТК требует 1.5× и 2×, постановление — 1×) и норм отпуска (24 календарных vs 18 рабочих дней). Приказ Минфин содержит ссылки на два утративших силу нормативных акта. Рекомендую начать с анализа противоречий через соответствующую вкладку.';
+}
+
+// ─── STEP CYCLE ───
+function startSteps(steps, elId) {
+  let i = 0;
+  const el = document.getElementById(elId);
+  if (el) el.textContent = steps[0];
+  return setInterval(() => { if (el) el.textContent = steps[i++ % steps.length]; }, 1600);
+}
+
+// ─── CONFLICTS ───
+async function runConflicts() {
+  if (S.docs.length < 1) { toast('Загрузите хотя бы один документ', 'warn'); return; }
+  const mode = document.getElementById('mode-sel').value;
+  setLoading('conflicts', true);
+  document.getElementById('rlist').innerHTML = '';
+  document.getElementById('run-btn').disabled = true;
+
+  const modeLabels = { full:'Полный анализ', conflicts:'Противоречия', obsolete:'Устаревшие нормы', risk:'Правовые риски' };
+  const timer = startSteps(['Загрузка документов...','Анализ норм...','Поиск конфликтов...','Формирование отчёта...'], 'lstep');
+
+  const docsStr = S.docs.map((d,i)=>`=== Документ ${i+1}: ${d.name} ===\n${d.text.slice(0,2500)}`).join('\n\n');
+  const modeHint = {
+    full: 'противоречия, устаревшие ссылки, правовые риски и связи между нормами',
+    conflicts: 'только прямые противоречия и несоответствия между нормами',
+    obsolete: 'только устаревшие нормы, ссылки на отменённые акты и неактуальные формы',
+    risk: 'правовые риски и уязвимости для организаций',
+  };
+
+  const prompt = `Ты — эксперт по анализу нормативно-правовых актов. Найди: ${modeHint[mode]}.
+
+${docsStr}
+
+Верни ТОЛЬКО JSON-массив без markdown и \`\`\`. Каждый элемент:
+{"type":"conflict|obsolete|link|risk","severity":"high|medium|low","title":"краткое название до 80 символов","description":"детальное объяснение на русском 2-4 предложения","articles":["Документ, Норма"],"recommendation":"конкретная рекомендация"}
+
+Найди 5-8 наиболее значимых проблем.`;
+
+  try {
+    const raw = await callLLM(prompt);
+    clearInterval(timer);
+    const items = parseJSON(raw);
+    S.conflicts = items;
+    renderConflicts(items);
+    updateStats(items);
+    setLoading('conflicts', false);
+    toast(`Найдено: ${items.length} результатов`, 'ok');
+  } catch(e) {
+    clearInterval(timer);
+    setLoading('conflicts', false);
+    showEmpty('conflicts');
+    toast('Ошибка: ' + e.message, 'err');
+  }
   document.getElementById('run-btn').disabled = false;
 }
 
-function renderResults(results) {
-  const list = document.getElementById('results-list');
-  list.innerHTML = results.map((r, i) => `
-    <div class="result-card">
-      <div class="result-card-header" onclick="toggleResult(${i})">
-        <div class="severity-dot sev-${r.severity === 'high' ? 'high' : r.severity === 'medium' ? 'med' : 'low'}"></div>
-        <div class="result-title">${r.title}</div>
-        <div class="result-type type-${r.type === 'conflict' ? 'conflict' : r.type === 'obsolete' ? 'obsolete' : 'link'}">
-          ${r.type === 'conflict' ? 'ПРОТИВОРЕЧИЕ' : r.type === 'obsolete' ? 'УСТАРЕЛО' : 'СВЯЗЬ'}
-        </div>
-        <span style="color:var(--text-dim);font-size:12px;margin-left:8px">▾</span>
+function renderConflicts(items) {
+  const map = { conflict:'conflict', obsolete:'obsolete', link:'link', risk:'risk' };
+  const tags = { conflict:'ПРОТИВОРЕЧИЕ', obsolete:'УСТАРЕЛО', link:'СВЯЗЬ', risk:'РИСК' };
+  const sevCls = { high:'h', medium:'m', low:'l' };
+  document.getElementById('rlist').innerHTML = items.map((r,i) => `
+    <div class="rcard">
+      <div class="rcard-head" onclick="toggleR(${i})">
+        <div class="sev ${sevCls[r.severity]||'l'}"></div>
+        <div class="rtitle">${r.title}</div>
+        <div class="rtag ${map[r.type]||'link'}">${tags[r.type]||r.type.toUpperCase()}</div>
+        <span class="rtoggle" id="rt${i}">▾</span>
       </div>
-      <div class="result-body" id="rb-${i}">
-        <div class="result-text">${r.description}</div>
-        ${r.recommendation ? `<div class="result-text" style="margin-top:8px;color:var(--accent3);font-size:12px;font-family:var(--mono)">→ ${r.recommendation}</div>` : ''}
-        <div class="result-articles">
-          ${(r.articles || []).map(a => `<div class="article-chip">${a}</div>`).join('')}
-        </div>
+      <div class="rbody" id="rb${i}">
+        <div class="rdesc">${r.description}</div>
+        ${r.recommendation?`<div class="rrec">→ ${r.recommendation}</div>`:''}
+        <div class="rchips">${(r.articles||[]).map(a=>`<div class="rchip">${a}</div>`).join('')}</div>
       </div>
-    </div>
-  `).join('');
+    </div>`).join('');
 }
 
-function toggleResult(i) {
-  const body = document.getElementById('rb-' + i);
-  body.classList.toggle('open');
+function toggleR(i) {
+  document.getElementById('rb'+i).classList.toggle('open');
+  const t = document.getElementById('rt'+i);
+  t.classList.toggle('open');
 }
 
-function updateStats(results) {
-  const conflicts = results.filter(r => r.type === 'conflict').length;
-  const obsolete = results.filter(r => r.type === 'obsolete').length;
-  const links = results.filter(r => r.type === 'link').length;
-  document.getElementById('stat-conflicts').textContent = conflicts;
-  document.getElementById('stat-obsolete').textContent = obsolete;
-  document.getElementById('stat-links').textContent = links;
-  if (conflicts > 0) { document.getElementById('conflict-badge').style.display = ''; document.getElementById('conflict-badge').textContent = conflicts; }
-  if (obsolete > 0) { document.getElementById('obs-badge').style.display = ''; document.getElementById('obs-badge').textContent = obsolete; }
+function updateStats(items) {
+  document.getElementById('st-c').textContent = items.filter(r=>r.type==='conflict').length;
+  document.getElementById('st-o').textContent = items.filter(r=>r.type==='obsolete').length;
+  document.getElementById('st-l').textContent = items.filter(r=>r.type==='link'||r.type==='risk').length;
+  document.getElementById('st-d').textContent = S.docs.length;
+  document.getElementById('stats').style.display = 'grid';
+  const cc = items.filter(r=>r.type==='conflict').length;
+  const oc = items.filter(r=>r.type==='obsolete').length;
+  if (cc>0) { document.getElementById('badge-conflicts').style.display=''; document.getElementById('badge-conflicts').textContent=cc; }
+  if (oc>0) { document.getElementById('badge-obsolete').style.display=''; document.getElementById('badge-obsolete').textContent=oc; }
 }
 
-function clearResults() {
-  state.results = [];
-  document.getElementById('results-list').innerHTML = '';
-  document.getElementById('empty-state').style.display = 'flex';
-  document.getElementById('stats-row').style.display = 'none';
+function clearConflicts() {
+  S.conflicts = [];
+  document.getElementById('rlist').innerHTML = '';
+  document.getElementById('stats').style.display = 'none';
+  showEmpty('conflicts');
 }
 
-// ===== GRAPH =====
-async function buildGraph() {
-  if (!getApiKey() && state.docs.length === 0) {
-    renderDemoGraph(); return;
+// ─── OBSOLETE ───
+async function runObsolete() {
+  if (S.docs.length < 1) { toast('Загрузите документы', 'warn'); return; }
+  setLoading('obs', true);
+  document.getElementById('obs-wrap').style.display = 'none';
+  document.getElementById('obs-run-btn').disabled = true;
+
+  const docsStr = S.docs.map((d,i)=>`=== ${d.name} ===\n${d.text.slice(0,2500)}`).join('\n\n');
+  const prompt = `Ты — эксперт по нормативному праву. Найди ВСЕ устаревшие нормы, ссылки на отменённые/утратившие силу акты, недействующие формы документов и устаревшие процедуры.
+
+${docsStr}
+
+Верни ТОЛЬКО JSON-массив без markdown:
+[{"norm":"название нормы или пункта","doc":"источник","issue":"в чём проблема","status":"replaced|partial|review","recommendation":"что сделать"}]
+
+Найди 4-7 позиций.`;
+
+  try {
+    const raw = await callLLM(prompt);
+    const items = parseJSON(raw);
+    S.obsData = items;
+    renderObs(items);
+    setLoading('obs', false);
+    const b = document.getElementById('badge-obsolete');
+    b.style.display = ''; b.textContent = items.length;
+    toast(`Найдено устаревших: ${items.length}`, 'ok');
+  } catch(e) {
+    setLoading('obs', false);
+    showEmpty('obs');
+    toast('Ошибка: ' + e.message, 'err');
   }
-  if (state.docs.length === 0) { renderDemoGraph(); return; }
+  document.getElementById('obs-run-btn').disabled = false;
+}
 
-  const svg = d3.select('#graph-svg');
+function renderObs(items) {
+  const sc = { replaced:'replaced', partial:'partial', review:'review' };
+  const sl = { replaced:'ЗАМЕНЕНА', partial:'ЧАСТИЧНО', review:'ПЕРЕСМОТР' };
+  document.getElementById('obs-body').innerHTML = items.map(r=>`
+    <tr>
+      <td style="color:var(--txtb);font-weight:500">${r.norm}</td>
+      <td style="color:var(--txtd);font-family:var(--mono);font-size:10px">${r.doc}</td>
+      <td style="line-height:1.6">${r.issue}</td>
+      <td><span class="ostat ${sc[r.status]||'review'}">${sl[r.status]||r.status}</span></td>
+      <td style="color:var(--green);font-size:11px">${r.recommendation||''}</td>
+    </tr>`).join('');
+  document.getElementById('obs-wrap').style.display = 'block';
+}
+
+function clearObs() {
+  S.obsData = [];
+  document.getElementById('obs-body').innerHTML = '';
+  document.getElementById('obs-wrap').style.display = 'none';
+  showEmpty('obs');
+}
+
+// ─── GRAPH ───
+async function buildGraph() {
+  const svg = d3.select('#gsvg');
   svg.selectAll('*').remove();
 
-  const docsText = state.docs.map((d, i) => `Документ ${i+1}: ${d.name}\n${d.text.slice(0, 1500)}`).join('\n\n');
-
   let nodes = [], links = [];
-  if (getApiKey()) {
-    try {
-      const resp = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 1000,
-          messages: [{ role: 'user', content: `Проанализируй документы и создай граф связей. Верни ТОЛЬКО JSON (без markdown):
-{"nodes":[{"id":"n1","label":"Название документа","type":"law|decree|order"}],"links":[{"source":"n1","target":"n2","label":"тип связи","conflict":true|false}]}
 
-${docsText}` }],
-        }),
-      });
-      const data = await resp.json();
-      const text = data.content.map(b => b.text || '').join('');
-      const clean = text.replace(/```json|```/g, '').trim();
-      const graph = JSON.parse(clean);
-      nodes = graph.nodes; links = graph.links;
-    } catch(e) { }
+  if (S.docs.length > 0) {
+    const docsStr = S.docs.map((d,i)=>`Документ ${i+1}: ${d.name}\n${d.text.slice(0,1500)}`).join('\n\n');
+    const prompt = `Построй граф связей между нормативными документами. Верни ТОЛЬКО JSON:
+{"nodes":[{"id":"n0","label":"Название","type":"law|decree|order"}],"links":[{"source":"n0","target":"n1","label":"тип","conflict":true}]}
+
+${docsStr}`;
+    try {
+      const raw = await callLLM(prompt);
+      const clean = raw.replace(/```json|```/g,'').trim();
+      const g = JSON.parse(clean);
+      nodes = g.nodes; links = g.links;
+    } catch {}
   }
 
   if (!nodes.length) {
-    nodes = state.docs.map((d, i) => ({ id: 'n' + i, label: d.name.replace(/\.[^.]+$/, ''), type: i === 0 ? 'law' : i === 1 ? 'decree' : 'order' }));
-    links = nodes.flatMap((n, i) => nodes.slice(i+1).map((m, j) => ({ source: n.id, target: m.id, label: 'регулирует', conflict: Math.random() > 0.5 })));
+    // demo graph
+    nodes = [
+      {id:'n0',label:'Трудовой кодекс',type:'law'},
+      {id:'n1',label:'Постановление МТ',type:'decree'},
+      {id:'n2',label:'Приказ Минфин',type:'order'},
+      {id:'n3',label:'КоАП РК',type:'law'},
+    ];
+    links = [
+      {source:'n0',target:'n1',label:'противоречит',conflict:true},
+      {source:'n0',target:'n3',label:'ссылается',conflict:false},
+      {source:'n1',target:'n2',label:'конфликт',conflict:true},
+    ];
   }
 
-  renderGraph(nodes, links);
-}
-
-function renderDemoGraph() {
-  const nodes = [
-    { id: 'n0', label: 'Закон о труде', type: 'law' },
-    { id: 'n1', label: 'Постановление Минтруда', type: 'decree' },
-    { id: 'n2', label: 'Приказ Минфин', type: 'order' },
-    { id: 'n3', label: 'Кодекс об АП', type: 'law' },
-  ];
-  const links = [
-    { source: 'n0', target: 'n1', label: 'противоречие', conflict: true },
-    { source: 'n0', target: 'n3', label: 'ссылается', conflict: false },
-    { source: 'n1', target: 'n2', label: 'регулирует', conflict: false },
-    { source: 'n2', target: 'n0', label: 'конфликт', conflict: true },
-  ];
   renderGraph(nodes, links);
 }
 
 function renderGraph(nodes, links) {
-  const el = document.getElementById('graph-svg');
-  const W = el.clientWidth || 700, H = 480;
-  const svg = d3.select('#graph-svg').attr('width', W).attr('height', H);
+  const el = document.getElementById('gsvg');
+  const W = el.clientWidth || 700, H = el.clientHeight || 380;
+  const svg = d3.select('#gsvg').attr('width', W).attr('height', H);
   svg.selectAll('*').remove();
 
-  const colorMap = { law: 'var(--accent)', decree: 'var(--warn)', order: 'var(--accent3)' };
+  const typeColor = { law:'#00d4ff', decree:'#f5a623', order:'#3ddc84' };
 
-  svg.append('defs').append('marker').attr('id', 'arr').attr('viewBox', '0 -5 10 10').attr('refX', 22).attr('markerWidth', 6).attr('markerHeight', 6).attr('orient', 'auto')
-    .append('path').attr('d', 'M0,-5L10,0L0,5').attr('fill', 'var(--border2)');
+  svg.append('defs').append('marker').attr('id','garr').attr('viewBox','0 -5 10 10').attr('refX',26).attr('markerWidth',5).attr('markerHeight',5).attr('orient','auto')
+    .append('path').attr('d','M0,-5L10,0L0,5').attr('fill','var(--bd2)');
+
+  svg.append('defs').append('marker').attr('id','garr-red').attr('viewBox','0 -5 10 10').attr('refX',26).attr('markerWidth',5).attr('markerHeight',5).attr('orient','auto')
+    .append('path').attr('d','M0,-5L10,0L0,5').attr('fill','var(--red)');
 
   const sim = d3.forceSimulation(nodes)
-    .force('link', d3.forceLink(links).id(d => d.id).distance(130))
-    .force('charge', d3.forceManyBody().strength(-300))
-    .force('center', d3.forceCenter(W/2, H/2));
+    .force('link', d3.forceLink(links).id(d=>d.id).distance(150))
+    .force('charge', d3.forceManyBody().strength(-400))
+    .force('center', d3.forceCenter(W/2, H/2))
+    .force('collision', d3.forceCollide(50));
 
   const link = svg.append('g').selectAll('line').data(links).join('line')
-    .attr('stroke', d => d.conflict ? 'var(--accent2)' : 'var(--border2)')
-    .attr('stroke-width', d => d.conflict ? 2 : 1)
-    .attr('stroke-dasharray', d => d.conflict ? '5,3' : null)
-    .attr('marker-end', 'url(#arr)');
+    .attr('stroke', d=>d.conflict?'var(--red)':'var(--bd2)')
+    .attr('stroke-width', d=>d.conflict?1.5:1)
+    .attr('stroke-dasharray', d=>d.conflict?'6,3':null)
+    .attr('marker-end', d=>d.conflict?'url(#garr-red)':'url(#garr)');
 
-  const linkLabel = svg.append('g').selectAll('text').data(links).join('text')
-    .attr('font-size', 9).attr('fill', 'var(--text-dim)').attr('font-family', 'Martian Mono, monospace')
-    .attr('text-anchor', 'middle').text(d => d.label);
+  const llabel = svg.append('g').selectAll('text').data(links).join('text')
+    .attr('font-size',9).attr('fill','var(--txtd)').attr('font-family','IBM Plex Mono,monospace').attr('text-anchor','middle').text(d=>d.label);
 
-  const node = svg.append('g').selectAll('g').data(nodes).join('g')
-    .attr('cursor', 'pointer')
-    .on('click', (e, d) => { document.getElementById('graph-info').textContent = `Узел: ${d.label} | Тип: ${d.type}`; })
-    .call(d3.drag().on('start', (e, d) => { if (!e.active) sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
-      .on('drag', (e, d) => { d.fx = e.x; d.fy = e.y; })
-      .on('end', (e, d) => { if (!e.active) sim.alphaTarget(0); d.fx = null; d.fy = null; }));
+  const node = svg.append('g').selectAll('g').data(nodes).join('g').attr('cursor','pointer')
+    .on('click',(e,d)=>{ document.getElementById('ginfo').textContent=`${d.label} · ${d.type} · ID: ${d.id}`; })
+    .call(d3.drag()
+      .on('start',(e,d)=>{if(!e.active)sim.alphaTarget(.3).restart();d.fx=d.x;d.fy=d.y})
+      .on('drag',(e,d)=>{d.fx=e.x;d.fy=e.y})
+      .on('end',(e,d)=>{if(!e.active)sim.alphaTarget(0);d.fx=null;d.fy=null}));
 
-  node.append('circle').attr('r', 20).attr('fill', d => colorMap[d.type] || 'var(--accent)').attr('fill-opacity', 0.15)
-    .attr('stroke', d => colorMap[d.type] || 'var(--accent)').attr('stroke-width', 1.5);
-  node.append('text').attr('text-anchor', 'middle').attr('dy', 32).attr('font-size', 10).attr('fill', 'var(--text-dim)').attr('font-family', 'Martian Mono, monospace')
-    .text(d => d.label.length > 18 ? d.label.slice(0, 16) + '…' : d.label);
+  node.append('circle').attr('r',22).attr('fill',d=>typeColor[d.type]||'var(--cyan)').attr('fill-opacity',.12).attr('stroke',d=>typeColor[d.type]||'var(--cyan)').attr('stroke-width',1.5);
+  node.append('text').attr('text-anchor','middle').attr('dy',36).attr('font-size',10).attr('fill','var(--txtd)').attr('font-family','IBM Plex Mono,monospace').text(d=>d.label.length>18?d.label.slice(0,16)+'…':d.label);
 
-  sim.on('tick', () => {
-    link.attr('x1', d => d.source.x).attr('y1', d => d.source.y).attr('x2', d => d.target.x).attr('y2', d => d.target.y);
-    linkLabel.attr('x', d => (d.source.x + d.target.x)/2).attr('y', d => (d.source.y + d.target.y)/2 - 6);
-    node.attr('transform', d => `translate(${d.x},${d.y})`);
+  sim.on('tick',()=>{
+    link.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y).attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);
+    llabel.attr('x',d=>(d.source.x+d.target.x)/2).attr('y',d=>(d.source.y+d.target.y)/2-7);
+    node.attr('transform',d=>`translate(${d.x},${d.y})`);
   });
 }
 
-function resetGraph() {
-  d3.select('#graph-svg').selectAll('*').remove();
-  document.getElementById('graph-info').textContent = '';
-}
+function resetGraph() { d3.select('#gsvg').selectAll('*').remove(); document.getElementById('ginfo').textContent=''; }
 
-// ===== OBSOLETE =====
-async function runObsolete() {
-  if (!getApiKey()) { showToast('Введите API-ключ', 'error'); return; }
-  if (state.docs.length === 0) { showToast('Загрузите документы', 'error'); return; }
-
-  document.getElementById('obs-empty').style.display = 'none';
-  document.getElementById('obs-loader').style.display = 'flex';
-  document.getElementById('obs-table').style.display = 'none';
-
-  const docsText = state.docs.map((d, i) => `=== ${d.name} ===\n${d.text.slice(0, 2000)}`).join('\n\n');
-
-  try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        messages: [{ role: 'user', content: `Найди устаревшие нормы, ссылки на отменённые акты и устаревшие процедуры. Верни ТОЛЬКО JSON-массив (без markdown):
-[{"norm":"название нормы/статьи","doc":"источник","issue":"в чём проблема","status":"replaced|partial|review"}]
-
-${docsText}` }],
-      }),
-    });
-    const data = await resp.json();
-    if (!resp.ok) throw new Error(data.error?.message);
-    const text = data.content.map(b => b.text || '').join('');
-    const clean = text.replace(/```json|```/g, '').trim();
-    let items = [];
-    try { items = JSON.parse(clean); } catch(e) { const m = text.match(/\[[\s\S]*\]/); if (m) items = JSON.parse(m[0]); }
-
-    renderObsolete(items);
-    document.getElementById('obs-loader').style.display = 'none';
-    showToast(`Найдено: ${items.length} устаревших норм`, items.length > 0 ? 'success' : '');
-  } catch(e) {
-    document.getElementById('obs-loader').style.display = 'none';
-    document.getElementById('obs-empty').style.display = 'flex';
-    showToast('Ошибка: ' + e.message, 'error');
-  }
-}
-
-function renderObsolete(items) {
-  const tbody = document.getElementById('obs-tbody');
-  const statusLabel = { replaced: 'ЗАМЕНЕНА', partial: 'ЧАСТИЧНО', review: 'ПЕРЕСМОТР' };
-  const statusClass = { replaced: 'obs-replaced', partial: 'obs-partial', review: 'obs-review' };
-  tbody.innerHTML = items.map(item => `
-    <tr>
-      <td>${item.norm || '—'}</td>
-      <td style="color:var(--text-dim);font-family:var(--mono);font-size:10px">${item.doc || '—'}</td>
-      <td>${item.issue || '—'}</td>
-      <td><span class="obs-status ${statusClass[item.status] || 'obs-review'}">${statusLabel[item.status] || item.status || '?'}</span></td>
-    </tr>
-  `).join('');
-  document.getElementById('obs-table').style.display = 'table';
-}
-
-// ===== CHAT =====
-function chatKeydown(e) {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
-}
+// ─── CHAT ───
+function chatKey(e) { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat();} }
 
 async function sendChat() {
-  const input = document.getElementById('chat-input');
-  const text = input.value.trim();
+  const el = document.getElementById('cinput');
+  const text = el.value.trim();
   if (!text) return;
-  if (!getApiKey()) { showToast('Введите API-ключ', 'error'); return; }
+  el.value = '';
+  addCMsg('user', text);
+  S.chat.push({ role:'user', content:text });
 
-  input.value = '';
-  addMsg('user', text);
-  state.chatHistory.push({ role: 'user', content: text });
-
-  const thinkingEl = addThinking();
-
-  const docsContext = state.docs.length > 0
-    ? 'Контекст документов:\n' + state.docs.map(d => `[${d.name}]\n${d.text.slice(0, 1500)}`).join('\n\n') + '\n\n'
-    : '';
-
-  const systemPrompt = `Ты — AI-ассистент для анализа нормативно-правовых актов. Отвечай кратко и профессионально на русском языке. 
-${docsContext}Отвечай на вопросы по этим документам. Цитируй конкретные статьи и пункты.`;
+  const thinking = addThinking();
+  const docsCtx = S.docs.length > 0 ? 'Документы для анализа:\n' + S.docs.map(d=>`[${d.name}]\n${d.text.slice(0,1500)}`).join('\n\n') + '\n\nОтвечай точно по этим документам, цитируй статьи и пункты.\n\n' : '';
+  const sysCtx = docsCtx + 'Ты — эксперт по нормативно-правовым актам. Отвечай профессионально на русском.';
+  const prompt = sysCtx + '\n\n' + S.chat.map(m=>`${m.role==='user'?'Вопрос':'Ответ'}: ${m.content}`).join('\n') + '\nОтвет:';
 
   try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        system: systemPrompt,
-        messages: state.chatHistory,
-      }),
-    });
-    const data = await resp.json();
-    if (!resp.ok) throw new Error(data.error?.message);
-    const reply = data.content.map(b => b.text || '').join('');
-    thinkingEl.remove();
-    addMsg('ai', reply);
-    state.chatHistory.push({ role: 'assistant', content: reply });
+    const reply = await callLLM(prompt);
+    thinking.remove();
+    addCMsg('ai', reply);
+    S.chat.push({ role:'assistant', content:reply });
   } catch(e) {
-    thinkingEl.remove();
-    addMsg('ai', '⚠ Ошибка: ' + e.message);
+    thinking.remove();
+    addCMsg('ai', '⚠ Ошибка: ' + e.message);
   }
 }
 
-function addMsg(role, text) {
-  const msgs = document.getElementById('chat-messages');
+function addCMsg(role, text) {
+  const list = document.getElementById('cmsg-list');
   const el = document.createElement('div');
-  el.className = `msg msg-${role}`;
-  el.innerHTML = `
-    <div class="msg-avatar">${role === 'user' ? '👤' : '⚖'}</div>
-    <div class="msg-bubble streaming-text">${text.replace(/\n/g, '<br>')}</div>
-  `;
-  msgs.appendChild(el);
-  msgs.scrollTop = msgs.scrollHeight;
+  el.className = `cmsg ${role}`;
+  el.innerHTML = `<div class="cav">${role==='user'?'👤':'⚖'}</div><div class="cbubble">${text.replace(/\n/g,'<br>')}</div>`;
+  list.appendChild(el);
+  list.scrollTop = list.scrollHeight;
   return el;
 }
 
 function addThinking() {
-  const msgs = document.getElementById('chat-messages');
+  const list = document.getElementById('cmsg-list');
   const el = document.createElement('div');
-  el.className = 'msg msg-ai';
-  el.innerHTML = `<div class="msg-avatar">⚖</div><div class="msg-bubble"><div class="thinking"><span></span><span></span><span></span></div></div>`;
-  msgs.appendChild(el);
-  msgs.scrollTop = msgs.scrollHeight;
+  el.className = 'cmsg ai';
+  el.innerHTML = `<div class="cav">⚖</div><div class="cbubble"><div class="thinking"><span></span><span></span><span></span></div></div>`;
+  list.appendChild(el);
+  list.scrollTop = list.scrollHeight;
   return el;
 }
 
-// ===== TOAST =====
-function showToast(msg, type = '') {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast' + (type ? ' ' + type : '') + ' show';
-  setTimeout(() => t.classList.remove('show'), 3000);
+// ─── UTILS ───
+function switchPanel(name, el) {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nitem').forEach(n=>n.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  el.classList.add('active');
+  if (name === 'graph' && d3.select('#gsvg').selectAll('*').size()===0) setTimeout(buildGraph, 100);
 }
 
-// Init demo graph on graph panel open
-document.querySelectorAll('.nav-item')[1].addEventListener('click', () => {
-  setTimeout(() => { if (d3.select('#graph-svg').selectAll('*').size() === 0) renderDemoGraph(); }, 100);
-});
+function setLoading(scope, on) {
+  if (scope === 'conflicts') {
+    document.getElementById('conflicts-loader').classList.toggle('show', on);
+    document.getElementById('conflicts-empty').style.display = on?'none':'';
+  } else {
+    document.getElementById('obs-loader').classList.toggle('show', on);
+    document.getElementById('obs-empty').style.display = on?'none':'';
+  }
+}
+function showEmpty(scope) {
+  if (scope === 'conflicts') document.getElementById('conflicts-empty').style.display = '';
+  else document.getElementById('obs-empty').style.display = '';
+}
+
+function toast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (type?' '+type:'') + ' show';
+  setTimeout(()=>t.classList.remove('show'), 3000);
+}
 </script>
 </body>
 </html>
