@@ -7,6 +7,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.2/marked.min.js"></script>
 <style>
 :root {
   --bg:#06080a;
@@ -137,10 +140,10 @@ body::after{content:'';position:fixed;inset:0;background-image:radial-gradient(c
 .pb{padding:16px 24px;flex:1;overflow-y:auto}
 
 /* Stats */
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px}
 .stat{background:var(--s1);border:1px solid var(--bd);border-radius:4px;padding:12px 14px}
 .stat-n{font-family:var(--display);font-size:28px;letter-spacing:.02em;line-height:1;color:var(--txtb)}
-.stat-n.r{color:var(--red)} .stat-n.g{color:var(--gold)} .stat-n.c{color:var(--cyan)} .stat-n.gr{color:var(--green)}
+.stat-n.r{color:var(--red)} .stat-n.g{color:var(--gold)} .stat-n.c{color:var(--cyan)} .stat-n.gr{color:var(--green)} .stat-n.purple{color:var(--purple)}
 .stat-l{font-family:var(--mono);font-size:8px;color:var(--txtd);text-transform:uppercase;letter-spacing:.12em;margin-top:4px}
 
 /* Controls bar */
@@ -281,6 +284,7 @@ body::after{content:'';position:fixed;inset:0;background-image:radial-gradient(c
       <button class="pill mock active" id="pill-mock" onclick="setProvider('mock')">Мок-режим</button>
       <button class="pill free" id="pill-gemini" onclick="openProviderModal('gemini')">Gemini</button>
       <button class="pill free" id="pill-groq" onclick="openProviderModal('groq')">Groq</button>
+      <button class="pill" id="pill-deepseek" onclick="openProviderModal('deepseek')">DeepSeek</button>
       <button class="pill" id="pill-anthropic" onclick="openProviderModal('anthropic')">Claude</button>
       <button class="pill" id="pill-openai" onclick="openProviderModal('openai')">OpenAI</button>
     </div>
@@ -294,7 +298,7 @@ body::after{content:'';position:fixed;inset:0;background-image:radial-gradient(c
 <!-- SIDEBAR -->
 <aside class="sidebar">
   <div class="sb-block">
-    <div class="sb-label">Документы ({{ state.docs.length }})</div>
+    <div class="sb-label">Документы (<span id="doc-count">0</span>)</div>
     <div class="doc-list" id="doc-list"></div>
     <div class="dropzone" id="dropzone">
       <input type="file" id="file-input" multiple accept=".txt,.pdf,.docx,.doc">
@@ -342,6 +346,7 @@ body::after{content:'';position:fixed;inset:0;background-image:radial-gradient(c
         <div class="stat"><div class="stat-n g" id="st-o">0</div><div class="stat-l">Устаревших</div></div>
         <div class="stat"><div class="stat-n c" id="st-l">0</div><div class="stat-l">Связей</div></div>
         <div class="stat"><div class="stat-n gr" id="st-d">0</div><div class="stat-l">Документов</div></div>
+        <div class="stat"><div class="stat-n purple" id="st-e">0</div><div class="stat-l">Индекс энтропии</div></div>
       </div>
       <div class="cbar">
         <select class="sel" id="mode-sel">
@@ -352,6 +357,7 @@ body::after{content:'';position:fixed;inset:0;background-image:radial-gradient(c
         </select>
         <button class="btn btn-c" id="run-btn" onclick="runConflicts()">▶ Запустить</button>
         <button class="btn btn-g" onclick="clearConflicts()">✕ Очистить</button>
+        <button class="btn btn-g" id="export-btn" onclick="exportReport()" style="display:none">📥 Экспорт</button>
       </div>
       <div id="conflicts-empty" class="empty">
         <div class="empty-icon">📋</div>
@@ -435,6 +441,7 @@ body::after{content:'';position:fixed;inset:0;background-image:radial-gradient(c
       <div class="cinput-bar">
         <textarea class="cinput" id="cinput" placeholder="Задайте вопрос по документам... (Enter — отправить)" rows="1" onkeydown="chatKey(event)"></textarea>
         <button class="btn btn-c" onclick="sendChat()" style="align-self:flex-end;padding:10px 16px">→</button>
+        <button class="btn btn-g" id="clear-chat-btn" onclick="clearChat()" style="align-self:flex-end;padding:10px 12px">✕</button>
       </div>
     </div>
   </div>
@@ -479,18 +486,23 @@ const PROVIDERS = {
   gemini: {
     name: 'Google Gemini',
     free: true,
-    info: '🆓 Бесплатно: 1500 запросов/день\nПолучить ключ: aistudio.google.com/app/apikey\nМодель: gemini-2.5-flash',
+    info: '🆓 Бесплатно: 1500 запросов/день\nПолучить ключ: aistudio.google.com/app/apikey\nМодель: gemini-2.0-flash',
     placeholder: 'AIza...',
   },
   groq: {
-    name: 'Groq (llama3)',
+    name: 'Groq (Llama 3.3)',
     free: true,
-    info: '🆓 Бесплатно: 14 400 запросов/день, очень быстро\nПолучить ключ: console.groq.com/keys\nМодель: llama-3.1-70b-versatile',
+    info: '🆓 Бесплатно и молниеносно\nПолучить ключ: console.groq.com/keys\nМодель: llama-3.3-70b-versatile',
     placeholder: 'gsk_...',
+  },
+  deepseek: {
+    name: 'DeepSeek V3',
+    info: '💎 Очень умная и дешевая модель\nПолучить ключ: platform.deepseek.com\nМодель: deepseek-chat',
+    placeholder: 'sk-...',
   },
   anthropic: {
     name: 'Anthropic Claude',
-    info: '💳 Платный, $5 кредиты при регистрации\nПолучить ключ: console.anthropic.com\nМодель: claude-sonnet-4-20250514',
+    info: '💳 Платный, $5 кредиты при регистрации\nПолучить ключ: console.anthropic.com\nМодель: claude-3-5-sonnet-latest',
     placeholder: 'sk-ant-...',
   },
   openai: {
@@ -533,6 +545,8 @@ function saveProvider() {
 }
 
 // ─── FILES ───
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
 const dz = document.getElementById('dropzone');
 const fi = document.getElementById('file-input');
 dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag'); });
@@ -542,12 +556,64 @@ fi.addEventListener('change', e => handleFiles(e.target.files));
 
 async function handleFiles(files) {
   for (const f of files) {
-    const txt = await f.text();
-    S.docs.push({ name: f.name, text: txt });
+    let txt = '';
+    const ext = f.name.split('.').pop().toLowerCase();
+    
+    try {
+      if (ext === 'pdf') {
+        const arrayBuffer = await f.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        let fullText = '';
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const content = await page.getTextContent();
+          fullText += content.items.map(item => item.str).join(' ') + '\n';
+        }
+        txt = fullText;
+      } else if (ext === 'docx' || ext === 'doc') {
+        const arrayBuffer = await f.arrayBuffer();
+        const result = await mammoth.extractRawText({ arrayBuffer });
+        txt = result.value;
+      } else {
+        txt = await f.text();
+      }
+      
+      if (txt.trim()) {
+        S.docs.push({ name: f.name, text: txt });
+      } else {
+        toast(`Файл ${f.name} пуст или не удалось прочитать текст`, 'warn');
+      }
+    } catch (e) {
+      console.error(e);
+      toast(`Ошибка при чтении ${f.name}: ` + e.message, 'err');
+    }
   }
   renderDocs();
   toast(`Загружено: ${files.length} файл(ов)`, 'ok');
 }
+
+function openProviderModal(p) {
+  S.currentModal = p;
+  const pr = PROVIDERS[p];
+  document.getElementById('modal-title').textContent = pr.name;
+  document.getElementById('modal-sub').textContent = 'Введите API ключ для подключения';
+  document.getElementById('modal-info').style.whiteSpace = 'pre-line';
+  document.getElementById('modal-info').textContent = pr.info || '';
+  document.getElementById('modal-key').placeholder = pr.placeholder || 'Ключ...';
+  document.getElementById('modal-key').value = S.keys[p] || '';
+  document.getElementById('modal-bg').classList.add('show');
+  setTimeout(() => document.getElementById('modal-key').focus(), 100);
+}
+function closeModal() { document.getElementById('modal-bg').classList.remove('show'); }
+function saveProvider() {
+  const key = document.getElementById('modal-key').value.trim();
+  if (!key) { toast('Введите API ключ', 'err'); return; }
+  S.keys[S.currentModal] = key;
+  setProvider(S.currentModal);
+  closeModal();
+  toast(PROVIDERS[S.currentModal].name + ' подключён', 'ok');
+}
+
 function removeDoc(i) { S.docs.splice(i, 1); renderDocs(); }
 function renderDocs() {
   document.getElementById('doc-list').innerHTML = S.docs.map((d, i) => `
@@ -557,6 +623,7 @@ function renderDocs() {
       <span class="doc-del" onclick="removeDoc(${i})">✕</span>
     </div>`).join('');
   document.getElementById('st-d').textContent = S.docs.length;
+  document.getElementById('doc-count').textContent = S.docs.length;
   document.getElementById('stats').style.display = S.docs.length ? 'grid' : 'none';
 }
 
@@ -617,59 +684,74 @@ function loadDemo() {
 // ─── LLM CALL ───
 async function callLLM(prompt) {
   const p = S.provider;
-
   if (p === 'mock') return mockResponse(prompt);
 
   const key = S.keys[p];
   if (!key) throw new Error(`Нет ключа для ${PROVIDERS[p].name}. Нажмите на провайдер вверху.`);
 
+  const isJson = prompt.includes('Верни ТОЛЬКО JSON');
+  let proxyData = {};
+
   if (p === 'gemini') {
-    const isJson = prompt.includes('Верни ТОЛЬКО JSON');
-    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`, {
+    proxyData = {
+      url: `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`,
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+      data: {
         contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { maxOutputTokens: 4096, ...(isJson ? { responseMimeType: 'application/json' } : {}) },
-      }),
-    });
-    const d = await r.json();
-    if (!r.ok) throw new Error(d.error?.message || 'Gemini error');
-    return d.candidates[0].content.parts[0].text;
-  }
-
-  if (p === 'groq') {
-    const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        generationConfig: { maxOutputTokens: 8192, ...(isJson ? { responseMimeType: 'application/json' } : {}) },
+      }
+    };
+  } else if (p === 'groq') {
+    proxyData = {
+      url: 'https://api.groq.com/openai/v1/chat/completions',
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
-      body: JSON.stringify({ model: 'llama-3.1-70b-versatile', max_tokens: 2048, messages: [{ role: 'user', content: prompt }] }),
-    });
-    const d = await r.json();
-    if (!r.ok) throw new Error(d.error?.message || 'Groq error');
-    return d.choices[0].message.content;
-  }
-
-  if (p === 'anthropic') {
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1000, messages: [{ role: 'user', content: prompt }] }),
-    });
-    const d = await r.json();
-    if (!r.ok) throw new Error(d.error?.message || 'Anthropic error');
-    return d.content.map(b => b.text || '').join('');
-  }
-
-  if (p === 'openai') {
-    const r = await fetch('https://api.openai.com/v1/chat/completions', {
+      data: { model: 'llama-3.3-70b-versatile', max_tokens: 4096, messages: [{ role: 'user', content: prompt }] }
+    };
+  } else if (p === 'deepseek') {
+    proxyData = {
+      url: 'https://api.deepseek.com/chat/completions',
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
-      body: JSON.stringify({ model: 'gpt-4o-mini', max_tokens: 2048, messages: [{ role: 'user', content: prompt }] }),
-    });
-    const d = await r.json();
-    if (!r.ok) throw new Error(d.error?.message || 'OpenAI error');
-    return d.choices[0].message.content;
+      data: { model: 'deepseek-chat', max_tokens: 4096, messages: [{ role: 'user', content: prompt }] }
+    };
+  } else if (p === 'anthropic') {
+    proxyData = {
+      url: 'https://api.anthropic.com/v1/messages',
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01'
+      },
+      data: { model: 'claude-3-5-sonnet-latest', max_tokens: 1024, messages: [{ role: 'user', content: prompt }] }
+    };
+  } else if (p === 'openai') {
+    proxyData = {
+      url: 'https://api.openai.com/v1/chat/completions',
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+      data: { model: 'gpt-4o-mini', max_tokens: 2048, messages: [{ role: 'user', content: prompt }] }
+    };
   }
+
+  // Use the proxy to avoid CORS
+  const r = await fetch('/api/proxy', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(proxyData)
+  });
+
+  const d = await r.json();
+  if (!r.ok) {
+    const msg = d.error?.message || d.error || JSON.stringify(d);
+    throw new Error(msg);
+  }
+
+  if (p === 'gemini') return d.candidates[0].content.parts[0].text;
+  if (p === 'anthropic') return d.content.map(b => b.text || '').join('');
+  return d.choices[0].message.content;
 }
 
 function parseJSON(text) {
@@ -803,6 +885,18 @@ function renderConflicts(items) {
         <div class="rchips">${(r.articles||[]).map(a=>`<div class="rchip">${a}</div>`).join('')}</div>
       </div>
     </div>`).join('');
+  document.getElementById('export-btn').style.display = items.length ? 'inline-flex' : 'none';
+}
+
+function exportReport() {
+  if (!S.conflicts.length) return;
+  const content = S.conflicts.map(r => `[${r.severity.toUpperCase()}] ${r.title}\n${r.description}\nРекомендация: ${r.recommendation}\nСтатьи: ${r.articles?.join(', ')}\n\n`).join('---\n\n');
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `law_analysis_report_${new Date().toISOString().slice(0,10)}.txt`;
+  a.click();
 }
 
 function toggleR(i) {
@@ -812,13 +906,20 @@ function toggleR(i) {
 }
 
 function updateStats(items) {
-  document.getElementById('st-c').textContent = items.filter(r=>r.type==='conflict').length;
-  document.getElementById('st-o').textContent = items.filter(r=>r.type==='obsolete').length;
-  document.getElementById('st-l').textContent = items.filter(r=>r.type==='link'||r.type==='risk').length;
-  document.getElementById('st-d').textContent = S.docs.length;
-  document.getElementById('stats').style.display = 'grid';
   const cc = items.filter(r=>r.type==='conflict').length;
   const oc = items.filter(r=>r.type==='obsolete').length;
+  const lc = items.filter(r=>r.type==='link'||r.type==='risk').length;
+  document.getElementById('st-c').textContent = cc;
+  document.getElementById('st-o').textContent = oc;
+  document.getElementById('st-l').textContent = lc;
+  document.getElementById('st-d').textContent = S.docs.length;
+  
+  // Entropy Index calculation: basic formula for prototype
+  // (Conflicts * 10 + Obsolete * 5 + Risks * 3) / Docs, max 100
+  const entropy = Math.min(100, Math.round(((cc * 15) + (oc * 8) + (lc * 5)) / (S.docs.length || 1)));
+  document.getElementById('st-e').textContent = entropy + '%';
+  
+  document.getElementById('stats').style.display = 'grid';
   if (cc>0) { document.getElementById('badge-conflicts').style.display=''; document.getElementById('badge-conflicts').textContent=cc; }
   if (oc>0) { document.getElementById('badge-obsolete').style.display=''; document.getElementById('badge-obsolete').textContent=oc; }
 }
@@ -900,10 +1001,9 @@ async function buildGraph() {
 ${docsStr}`;
     try {
       const raw = await callLLM(prompt);
-      const clean = raw.replace(/```json|```/g,'').trim();
-      const g = JSON.parse(clean);
-      nodes = g.nodes; links = g.links;
-    } catch {}
+      const g = parseJSON(raw);
+      nodes = g.nodes || []; links = g.links || [];
+    } catch(e) { console.error('Graph build error:', e); }
   }
 
   if (!nodes.length) {
@@ -1003,7 +1103,8 @@ function addCMsg(role, text) {
   const list = document.getElementById('cmsg-list');
   const el = document.createElement('div');
   el.className = `cmsg ${role}`;
-  el.innerHTML = `<div class="cav">${role==='user'?'👤':'⚖'}</div><div class="cbubble">${text.replace(/\n/g,'<br>')}</div>`;
+  const htmlContent = marked.parse(text);
+  el.innerHTML = `<div class="cav">${role==='user'?'👤':'⚖'}</div><div class="cbubble">${htmlContent}</div>`;
   list.appendChild(el);
   list.scrollTop = list.scrollHeight;
   return el;
@@ -1017,6 +1118,15 @@ function addThinking() {
   list.appendChild(el);
   list.scrollTop = list.scrollHeight;
   return el;
+}
+
+function clearChat() {
+  S.chat = [];
+  document.getElementById('cmsg-list').innerHTML = `
+    <div class="cmsg ai">
+      <div class="cav">⚖</div>
+      <div class="cbubble">Привет! Чат очищен. Задайте любой вопрос по загруженным НПА.</div>
+    </div>`;
 }
 
 // ─── UTILS ───
@@ -1046,7 +1156,7 @@ function toast(msg, type='') {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.className = 'toast' + (type?' '+type:'') + ' show';
-  setTimeout(()=>t.classList.remove('show'), 3000);
+  setTimeout(()=>t.classList.remove('show'), 5000);
 }
 </script>
 </body>
