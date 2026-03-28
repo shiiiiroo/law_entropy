@@ -10,6 +10,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.2/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
 :root {
   --bg:#06080a;
@@ -618,13 +619,67 @@ function removeDoc(i) { S.docs.splice(i, 1); renderDocs(); }
 function renderDocs() {
   document.getElementById('doc-list').innerHTML = S.docs.map((d, i) => `
     <div class="doc-row">
-      <span style="font-size:13px">📄</span>
-      <span class="doc-name" title="${d.name}">${d.name}</span>
+      <div style="display:flex;align-items:center;gap:8px;flex:1">
+        <span style="font-size:13px">📄</span>
+        <div style="display:flex;flex-direction:column">
+          <span class="doc-name" title="${d.name}">${d.name}</span>
+          <span style="font-size:8px;color:var(--txtd)">${d.type || 'НПА'} · ${d.date || 'Дата неизв.'}</span>
+        </div>
+      </div>
       <span class="doc-del" onclick="removeDoc(${i})">✕</span>
     </div>`).join('');
   document.getElementById('st-d').textContent = S.docs.length;
   document.getElementById('doc-count').textContent = S.docs.length;
   document.getElementById('stats').style.display = S.docs.length ? 'grid' : 'none';
+}
+
+async function extractMeta(doc) {
+  if (S.provider === 'mock') {
+    doc.date = '2020-05-14';
+    doc.type = 'Закон';
+    doc.organ = 'Правительство';
+    return;
+  }
+  try {
+    const p = `Проанализируй первые 1000 символов документа и верни ТОЛЬКО JSON: { "date": "ГГГГ-ММ-ДД", "type": "Закон/Постановление/Приказ", "organ": "Кем принят", "title": "Название" }. Текст: ${doc.text.slice(0, 1000)}`;
+    const res = await callLLM(p);
+    const meta = parseJSON(res);
+    Object.assign(doc, meta);
+  } catch (e) { console.error('Meta extraction error', e); }
+}
+
+async function handleFiles(files) {
+  for (const f of files) {
+    let txt = '';
+    const ext = f.name.split('.').pop().toLowerCase();
+    try {
+      if (ext === 'pdf') {
+        const arrayBuffer = await f.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        let fullText = '';
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const content = await page.getTextContent();
+          fullText += content.items.map(item => item.str).join(' ') + '\n';
+        }
+        txt = fullText;
+      } else if (ext === 'docx' || ext === 'doc') {
+        const arrayBuffer = await f.arrayBuffer();
+        const result = await mammoth.extractRawText({ arrayBuffer });
+        txt = result.value;
+      } else {
+        txt = await f.text();
+      }
+      
+      if (txt.trim()) {
+        const doc = { name: f.name, text: txt };
+        await extractMeta(doc);
+        S.docs.push(doc);
+      }
+    } catch (e) { toast(`Ошибка: ${f.name}`, 'err'); }
+  }
+  renderDocs();
+  toast(`Загружено: ${files.length} файл(ов)`, 'ok');
 }
 
 // ─── DEMO DATA ───
@@ -890,13 +945,31 @@ function renderConflicts(items) {
 
 function exportReport() {
   if (!S.conflicts.length) return;
-  const content = S.conflicts.map(r => `[${r.severity.toUpperCase()}] ${r.title}\n${r.description}\nРекомендация: ${r.recommendation}\nСтатьи: ${r.articles?.join(', ')}\n\n`).join('---\n\n');
-  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `law_analysis_report_${new Date().toISOString().slice(0,10)}.txt`;
-  a.click();
+  const element = document.createElement('div');
+  element.style.padding = '40px';
+  element.style.color = '#000';
+  element.style.background = '#fff';
+  element.innerHTML = `
+    <h1>Отчёт об анализе нормативно-правовых актов</h1>
+    <p>Дата анализа: ${new Date().toLocaleDateString()}</p>
+    <hr>
+    ${S.conflicts.map(r => `
+      <div style="margin-bottom:24px">
+        <h3>[${r.type.toUpperCase()}] ${r.title}</h3>
+        <p><strong>Описание:</strong> ${r.description}</p>
+        <p><strong>Рекомендация:</strong> ${r.recommendation}</p>
+        <p><strong>Статьи:</strong> ${r.articles?.join(', ') || 'Нет ссылок'}</p>
+      </div>
+    `).join('')}
+  `;
+  const opt = {
+    margin: 1,
+    filename: `law_analysis_${new Date().toISOString().slice(0,10)}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2 },
+    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+  };
+  html2pdf().from(element).set(opt).save();
 }
 
 function toggleR(i) {
