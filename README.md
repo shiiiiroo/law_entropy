@@ -9,11 +9,27 @@
    ```bash
    npm install
    ```
-3. Запустите сервер:
+3. Запустите UI сервер (Frontend):
    ```bash
    npm start
    ```
-4. Откройте в браузере: [http://localhost:3000](http://localhost:3000)
+
+4. Для работы **Онлайн-поиска НПА** (Әділет, data.egov.kz) запустите Python-бэкенд. Откройте **новый** терминал и выполните:
+   - В Windows:
+     ```cmd
+     cd backend
+     run.bat
+     ```
+   - В Linux/MacOS:
+     ```bash
+     cd backend
+     python -m venv venv
+     source venv/bin/activate
+     pip install -r requirements.txt
+     uvicorn main:app --host 0.0.0.0 --port 8000
+     ```
+
+5. Откройте приложение в браузере: [http://localhost:3000](http://localhost:3000)
 
 ## Функции
 
