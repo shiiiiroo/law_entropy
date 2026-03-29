@@ -309,6 +309,15 @@ body::after{content:'';position:fixed;inset:0;background-image:radial-gradient(c
     </div>
   </div>
 
+  <div class="sb-block">
+    <div class="sb-label">Онлайн база (Әділет, eGov)</div>
+    <div class="key-row" style="margin-bottom:8px">
+      <input type="text" class="key-input" id="search-input" placeholder="Поиск НПА..." onkeydown="if(event.key === 'Enter') searchOnline()">
+      <button class="key-btn" id="search-btn" onclick="searchOnline()">🔍</button>
+    </div>
+    <div class="doc-list" id="search-results" style="max-height:160px; display:none;"></div>
+  </div>
+
   <div class="nav">
     <div class="sb-label" style="padding:0 2px">Модули анализа</div>
     <div class="nitem active" id="nav-conflicts" onclick="switchPanel('conflicts',this)">
@@ -1230,6 +1239,62 @@ function toast(msg, type='') {
   t.textContent = msg;
   t.className = 'toast' + (type?' '+type:'') + ' show';
   setTimeout(()=>t.classList.remove('show'), 5000);
+}
+
+// ─── ONLINE SEARCH (Python/FastAPI) ───
+async function searchOnline() {
+  const q = document.getElementById('search-input').value.trim();
+  if (!q) return;
+  const resDiv = document.getElementById('search-results');
+  const btn = document.getElementById('search-btn');
+  btn.textContent = '⏳';
+  resDiv.style.display = 'flex';
+  resDiv.innerHTML = '<div style="color:var(--txtd);font-size:10px;text-align:center;padding:10px;">Поиск...</div>';
+  
+  try {
+    const res = await fetch(`http://localhost:8000/api/search?q=${encodeURIComponent(q)}`);
+    const data = await res.json();
+    if (data.results && data.results.length > 0) {
+      resDiv.innerHTML = data.results.map(r => `
+        <div class="doc-row" style="cursor:pointer;" onclick="importDocument('${r.url || ''}', '${r.id || ''}', '${r.title.replace(/'/g, "\\'")}')">
+          <div style="font-size:14px;flex-shrink:0;">🌐</div>
+          <div style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+            <span class="doc-name" title="${r.title}">${r.title}</span>
+            <span style="font-size:8px;color:var(--txtd)">${r.source}</span>
+          </div>
+          <div style="color:var(--cyan);font-size:14px;margin-left:auto;">+</div>
+        </div>
+      `).join('');
+    } else {
+      resDiv.innerHTML = '<div style="color:var(--txtd);font-size:10px;text-align:center;padding:10px;">Ничего не найдено</div>';
+    }
+  } catch (e) {
+    resDiv.innerHTML = '<div style="color:var(--red);font-size:10px;text-align:center;padding:10px;">Ошибка: ' + e.message + '. Убедитесь, что python бэкенд запущен.</div>';
+  }
+  btn.textContent = '🔍';
+}
+
+async function importDocument(url, dataset_id, title) {
+  try {
+    toast(`Загрузка "${title.substring(0,20)}..."`, 'warn');
+    const param = url ? `url=${encodeURIComponent(url)}` : `dataset_id=${encodeURIComponent(dataset_id)}`;
+    const res = await fetch(`http://localhost:8000/api/extract?${param}`);
+    if (!res.ok) throw new Error('Данные недоступны');
+    const data = await res.json();
+    
+    if (!data.text || !data.text.trim()) {
+      toast('Текст документа пуст', 'warn');
+      return;
+    }
+    
+    const doc = { name: title.substring(0,30) + (title.length>30?'...':'') + '.txt', text: data.text };
+    await extractMeta(doc);
+    S.docs.push(doc);
+    renderDocs();
+    toast('Документ успешно импортирован', 'ok');
+  } catch(e) {
+    toast('Ошибка импорта: ' + e.message, 'err');
+  }
 }
 </script>
 </body>
