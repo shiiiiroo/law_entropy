@@ -42,6 +42,6 @@
 
 - Mock-режим (для демонстрации без API ключей)
 - Google Gemini (1.5 Flash)
-- Groq (Llama 3.1)
+- Alem LLM (alem.ai)
 - Anthropic Claude (3.5 Sonnet)
 - OpenAI GPT-4o mini

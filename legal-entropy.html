@@ -284,7 +284,7 @@ body::after{content:'';position:fixed;inset:0;background-image:radial-gradient(c
     <div class="provider-pills">
       <button class="pill mock active" id="pill-mock" onclick="setProvider('mock')">Мок-режим</button>
       <button class="pill free" id="pill-gemini" onclick="openProviderModal('gemini')">Gemini</button>
-      <button class="pill free" id="pill-groq" onclick="openProviderModal('groq')">Groq</button>
+      <button class="pill free" id="pill-alem" onclick="openProviderModal('alem')">AlemLLM</button>
       <button class="pill" id="pill-deepseek" onclick="openProviderModal('deepseek')">DeepSeek</button>
       <button class="pill" id="pill-anthropic" onclick="openProviderModal('anthropic')">Claude</button>
       <button class="pill" id="pill-openai" onclick="openProviderModal('openai')">OpenAI</button>
@@ -482,7 +482,7 @@ body::after{content:'';position:fixed;inset:0;background-image:radial-gradient(c
 // ─── STATE ───
 const S = {
   provider: 'mock',
-  keys: {},
+  keys: { alem: 'sk-C98N-HCoGr99V8eyY4yvKg' },
   docs: [],
   conflicts: [],
   obsData: [],
@@ -499,11 +499,11 @@ const PROVIDERS = {
     info: '🆓 Бесплатно: 1500 запросов/день\nПолучить ключ: aistudio.google.com/app/apikey\nМодель: gemini-2.0-flash',
     placeholder: 'AIza...',
   },
-  groq: {
-    name: 'Groq (Llama 3.3)',
+  alem: {
+    name: 'Alem LLM',
     free: true,
-    info: '🆓 Бесплатно и молниеносно\nПолучить ключ: console.groq.com/keys\nМодель: llama-3.3-70b-versatile',
-    placeholder: 'gsk_...',
+    info: '💡 Провайдер: alem.ai\nМодель: alemllm\nКлюч добавлен по умолчанию.',
+    placeholder: 'sk-...',
   },
   deepseek: {
     name: 'DeepSeek V3',
@@ -766,12 +766,12 @@ async function callLLM(prompt) {
         generationConfig: { maxOutputTokens: 8192, ...(isJson ? { responseMimeType: 'application/json' } : {}) },
       }
     };
-  } else if (p === 'groq') {
+  } else if (p === 'alem') {
     proxyData = {
-      url: 'https://api.groq.com/openai/v1/chat/completions',
+      url: 'https://llm.alem.ai/v1/chat/completions',
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
-      data: { model: 'llama-3.3-70b-versatile', max_tokens: 4096, messages: [{ role: 'user', content: prompt }] }
+      data: { model: 'alemllm', messages: [{ role: 'user', content: prompt }] }
     };
   } else if (p === 'deepseek') {
     proxyData = {
