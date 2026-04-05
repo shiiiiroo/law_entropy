@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ЗаконоМетр — Анализ НПА</title>
+<title>Law Entropy — Анализ НПА</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
@@ -276,13 +276,14 @@ body::after{content:'';position:fixed;inset:0;background-image:radial-gradient(c
 <header class="topbar">
   <div class="brand">
     <div>
-      <div class="brand-logo">ЗаконоМетр</div>
-      <div class="brand-sub">NPA Conflict Analyzer v2.0</div>
+      <div class="brand-logo" data-i18n="app_title">Law Entropy</div>
+      <div class="brand-sub" data-i18n="app_sub">NPA Conflict Analyzer v2.0</div>
     </div>
   </div>
   <div class="topbar-mid">
     <div class="provider-pills">
-      <button class="pill mock active" id="pill-mock" onclick="setProvider('mock')">Мок-режим</button>
+      <button class="pill mock active" id="pill-mock" onclick="setProvider('mock')" data-i18n="mock_mode">Мок-режим</button>
+      <button class="pill free" id="pill-groq" onclick="openProviderModal('groq')">Groq</button>
       <button class="pill free" id="pill-gemini" onclick="openProviderModal('gemini')">Gemini</button>
       <button class="pill free" id="pill-alem" onclick="openProviderModal('alem')">AlemLLM</button>
       <button class="pill" id="pill-deepseek" onclick="openProviderModal('deepseek')">DeepSeek</button>
@@ -291,53 +292,58 @@ body::after{content:'';position:fixed;inset:0;background-image:radial-gradient(c
     </div>
   </div>
   <div class="topbar-right">
+    <select class="sel" style="padding:4px 6px; font-size:10px; border:none; background:var(--s2); border-radius:3px;" onchange="changeLang(this.value)">
+      <option value="ru">RU</option>
+      <option value="kz">KZ</option>
+      <option value="en">EN</option>
+    </select>
     <div class="status-dot mock" id="status-dot"></div>
-    <div class="status-txt" id="status-txt">Мок-режим</div>
+    <div class="status-txt" id="status-txt" data-i18n="mock_mode">Мок-режим</div>
   </div>
 </header>
 
 <!-- SIDEBAR -->
 <aside class="sidebar">
   <div class="sb-block">
-    <div class="sb-label">Документы (<span id="doc-count">0</span>)</div>
+    <div class="sb-label"><span data-i18n="docs_lbl">Документы</span> (<span id="doc-count">0</span>)</div>
     <div class="doc-list" id="doc-list"></div>
     <div class="dropzone" id="dropzone">
       <input type="file" id="file-input" multiple accept=".txt,.pdf,.docx,.doc">
       <div style="font-size:18px;margin-bottom:4px">📄</div>
-      <div>Перетащите или нажмите</div>
+      <div data-i18n="drop_lbl">Перетащите или нажмите</div>
       <div style="font-size:10px;margin-top:2px;color:var(--txtd)">.txt · .pdf · .docx</div>
     </div>
   </div>
 
   <div class="sb-block">
-    <div class="sb-label">Онлайн база (Әділет, eGov)</div>
+    <div class="sb-label" data-i18n="online_base">Онлайн база (Әділет, eGov)</div>
     <div class="key-row" style="margin-bottom:8px">
-      <input type="text" class="key-input" id="search-input" placeholder="Поиск НПА..." onkeydown="if(event.key === 'Enter') searchOnline()">
+      <input type="text" class="key-input" id="search-input" placeholder="Поиск НПА..." data-i18n-placeholder="search_ph" onkeydown="if(event.key === 'Enter') searchOnline()">
       <button class="key-btn" id="search-btn" onclick="searchOnline()">🔍</button>
     </div>
     <div class="doc-list" id="search-results" style="max-height:160px; display:none;"></div>
   </div>
 
   <div class="nav">
-    <div class="sb-label" style="padding:0 2px">Модули анализа</div>
+    <div class="sb-label" style="padding:0 2px" data-i18n="modules_lbl">Модули анализа</div>
     <div class="nitem active" id="nav-conflicts" onclick="switchPanel('conflicts',this)">
-      <span class="ni-icon">⚡</span> Противоречия
+      <div data-i18n="nav_conflicts" style="display:flex;align-items:center;gap:10px;flex:1"><span class="ni-icon">⚡</span> Противоречия</div>
       <span class="ni-badge red" id="badge-conflicts" style="display:none">0</span>
     </div>
     <div class="nitem" id="nav-obsolete" onclick="switchPanel('obsolete',this)">
-      <span class="ni-icon">🗂</span> Устаревшие нормы
+      <div data-i18n="nav_obsolete" style="display:flex;align-items:center;gap:10px;flex:1"><span class="ni-icon">🗂</span> Устаревшие нормы</div>
       <span class="ni-badge gold" id="badge-obsolete" style="display:none">0</span>
     </div>
     <div class="nitem" id="nav-graph" onclick="switchPanel('graph',this)">
-      <span class="ni-icon">🕸</span> Граф связей
+      <div data-i18n="nav_graph" style="display:flex;align-items:center;gap:10px"><span class="ni-icon">🕸</span> Граф связей</div>
     </div>
     <div class="nitem" id="nav-chat" onclick="switchPanel('chat',this)">
-      <span class="ni-icon">💬</span> Чат с документами
+      <div data-i18n="nav_chat" style="display:flex;align-items:center;gap:10px"><span class="ni-icon">💬</span> Чат с документами</div>
     </div>
   </div>
 
   <div class="sb-footer">
-    <button class="demo-btn" onclick="loadDemo()">⚡ Загрузить демо-данные</button>
+    <button class="demo-btn" onclick="loadDemo()" data-i18n="load_demo">⚡ Загрузить демо-данные</button>
   </div>
 </aside>
 
@@ -347,36 +353,36 @@ body::after{content:'';position:fixed;inset:0;background-image:radial-gradient(c
   <!-- CONFLICTS PANEL -->
   <div class="panel active" id="panel-conflicts">
     <div class="ph">
-      <div class="ph-title">Анализ противоречий</div>
-      <div class="ph-sub">// Поиск конфликтующих и несовместимых норм между документами</div>
+      <div class="ph-title" data-i18n="ph_conflicts">Анализ противоречий</div>
+      <div class="ph-sub" data-i18n="ph_conflicts_sub">// Поиск конфликтующих и несовместимых норм между документами</div>
     </div>
     <div class="pb">
       <div class="stats" id="stats" style="display:none">
-        <div class="stat"><div class="stat-n r" id="st-c">0</div><div class="stat-l">Противоречий</div></div>
-        <div class="stat"><div class="stat-n g" id="st-o">0</div><div class="stat-l">Устаревших</div></div>
-        <div class="stat"><div class="stat-n c" id="st-l">0</div><div class="stat-l">Связей</div></div>
-        <div class="stat"><div class="stat-n gr" id="st-d">0</div><div class="stat-l">Документов</div></div>
-        <div class="stat"><div class="stat-n purple" id="st-e">0</div><div class="stat-l">Индекс энтропии</div></div>
+        <div class="stat"><div class="stat-n r" id="st-c">0</div><div class="stat-l" data-i18n="st_conflicts">Противоречий</div></div>
+        <div class="stat"><div class="stat-n g" id="st-o">0</div><div class="stat-l" data-i18n="st_obs">Устаревших</div></div>
+        <div class="stat"><div class="stat-n c" id="st-l">0</div><div class="stat-l" data-i18n="st_links">Связей</div></div>
+        <div class="stat"><div class="stat-n gr" id="st-d">0</div><div class="stat-l" data-i18n="st_docs">Документов</div></div>
+        <div class="stat"><div class="stat-n purple" id="st-e">0</div><div class="stat-l" data-i18n="st_entropy">Индекс энтропии</div></div>
       </div>
       <div class="cbar">
         <select class="sel" id="mode-sel">
-          <option value="full">Полный анализ</option>
-          <option value="conflicts">Только противоречия</option>
-          <option value="obsolete">Только устаревшие</option>
-          <option value="risk">Правовые риски</option>
+          <option value="full" data-i18n="opt_full">Полный анализ</option>
+          <option value="conflicts" data-i18n="opt_conflicts">Только противоречия</option>
+          <option value="obsolete" data-i18n="opt_obs">Только устаревшие</option>
+          <option value="risk" data-i18n="opt_risk">Правовые риски</option>
         </select>
-        <button class="btn btn-c" id="run-btn" onclick="runConflicts()">▶ Запустить</button>
-        <button class="btn btn-g" onclick="clearConflicts()">✕ Очистить</button>
-        <button class="btn btn-g" id="export-btn" onclick="exportReport()" style="display:none">📥 Экспорт</button>
+        <button class="btn btn-c" id="run-btn" onclick="runConflicts()" data-i18n="btn_run">▶ Запустить</button>
+        <button class="btn btn-g" onclick="clearConflicts()" data-i18n="btn_clear">✕ Очистить</button>
+        <button class="btn btn-g" id="export-btn" onclick="exportReport()" style="display:none" data-i18n="btn_export">📥 Экспорт</button>
       </div>
       <div id="conflicts-empty" class="empty">
         <div class="empty-icon">📋</div>
-        <div class="empty-txt">Загрузите документы и запустите анализ<br>или нажмите «Загрузить демо-данные» в боковой панели</div>
+        <div class="empty-txt" data-i18n="empty_conflicts">Загрузите документы и запустите анализ<br>или нажмите «Загрузить демо-данные» в боковой панели</div>
       </div>
       <div id="conflicts-loader" class="loader">
         <div class="lring"></div>
-        <div class="ltxt">Анализируем документы...</div>
-        <div class="lstep" id="lstep">Подготовка запроса</div>
+        <div class="ltxt" data-i18n="txt_analyzing">Анализируем документы...</div>
+        <div class="lstep" id="lstep" data-i18n="step_prep">Подготовка запроса</div>
       </div>
       <div class="rlist" id="rlist"></div>
     </div>
@@ -385,26 +391,26 @@ body::after{content:'';position:fixed;inset:0;background-image:radial-gradient(c
   <!-- OBSOLETE PANEL -->
   <div class="panel" id="panel-obsolete">
     <div class="ph">
-      <div class="ph-title">Устаревшие нормы</div>
-      <div class="ph-sub">// Положения требующие обновления, отмены или пересмотра</div>
+      <div class="ph-title" data-i18n="ph_obs">Устаревшие нормы</div>
+      <div class="ph-sub" data-i18n="ph_obs_sub">// Положения требующие обновления, отмены или пересмотра</div>
     </div>
     <div class="pb">
       <div class="cbar">
-        <button class="btn btn-c" id="obs-run-btn" onclick="runObsolete()">🔍 Найти устаревшие</button>
-        <button class="btn btn-g" onclick="clearObs()">✕ Очистить</button>
+        <button class="btn btn-c" id="obs-run-btn" onclick="runObsolete()" data-i18n="btn_run_obs">🔍 Найти устаревшие</button>
+        <button class="btn btn-g" onclick="clearObs()" data-i18n="btn_clear">✕ Очистить</button>
       </div>
       <div id="obs-empty" class="empty">
         <div class="empty-icon">🗂</div>
-        <div class="empty-txt">Запустите поиск устаревших норм</div>
+        <div class="empty-txt" data-i18n="empty_obs">Запустите поиск устаревших норм</div>
       </div>
       <div id="obs-loader" class="loader">
         <div class="lring"></div>
-        <div class="ltxt">Ищем устаревшие нормы...</div>
-        <div class="lstep">Анализ дат и ссылок</div>
+        <div class="ltxt" data-i18n="txt_finding">Ищем устаревшие нормы...</div>
+        <div class="lstep" data-i18n="step_dates">Анализ дат и ссылок</div>
       </div>
       <div class="obs-wrap" id="obs-wrap" style="display:none">
         <table class="otable" id="obs-table">
-          <thead><tr><th>Норма / Пункт</th><th>Документ</th><th>Проблема</th><th>Статус</th><th>Рекомендация</th></tr></thead>
+          <thead><tr><th data-i18n="th_norm">Норма / Пункт</th><th data-i18n="th_doc">Документ</th><th data-i18n="th_issue">Проблема</th><th data-i18n="th_status">Статус</th><th data-i18n="th_rec">Рекомендация</th></tr></thead>
           <tbody id="obs-body"></tbody>
         </table>
       </div>
@@ -414,18 +420,18 @@ body::after{content:'';position:fixed;inset:0;background-image:radial-gradient(c
   <!-- GRAPH PANEL -->
   <div class="panel" id="panel-graph">
     <div class="ph">
-      <div class="ph-title">Граф связей НПА</div>
-      <div class="ph-sub">// Интерактивная карта зависимостей между нормативными актами</div>
+      <div class="ph-title" data-i18n="ph_graph">Граф связей НПА</div>
+      <div class="ph-sub" data-i18n="ph_graph_sub">// Интерактивная карта зависимостей между нормативными актами</div>
     </div>
     <div class="pb" style="display:flex;flex-direction:column;min-height:0;height:calc(100vh - 120px)">
       <div class="cbar">
-        <button class="btn btn-c" onclick="buildGraph()">🕸 Построить граф</button>
-        <button class="btn btn-g" onclick="resetGraph()">↺ Сбросить</button>
+        <button class="btn btn-c" onclick="buildGraph()" data-i18n="btn_graph">🕸 Построить граф</button>
+        <button class="btn btn-g" onclick="resetGraph()" data-i18n="btn_graph_reset">↺ Сбросить</button>
         <div class="glegend" style="margin:0 0 0 8px">
-          <div class="gli"><div class="gldot" style="background:var(--cyan)"></div>Закон</div>
-          <div class="gli"><div class="gldot" style="background:var(--gold)"></div>Постановление</div>
-          <div class="gli"><div class="gldot" style="background:var(--green)"></div>Приказ</div>
-          <div class="gli"><div class="gldot" style="background:var(--red)"></div>Конфликт</div>
+          <div class="gli"><div class="gldot" style="background:var(--cyan)"></div><span data-i18n="gl_law">Закон</span></div>
+          <div class="gli"><div class="gldot" style="background:var(--gold)"></div><span data-i18n="gl_decree">Постановление</span></div>
+          <div class="gli"><div class="gldot" style="background:var(--green)"></div><span data-i18n="gl_order">Приказ</span></div>
+          <div class="gli"><div class="gldot" style="background:var(--red)"></div><span data-i18n="gl_conflict">Конфликт</span></div>
         </div>
       </div>
       <div style="flex:1;min-height:0">
@@ -439,17 +445,17 @@ body::after{content:'';position:fixed;inset:0;background-image:radial-gradient(c
   <div class="panel" id="panel-chat">
     <div class="chat-wrap">
       <div class="ph" style="padding-bottom:12px">
-        <div class="ph-title">Чат с документами</div>
-        <div class="ph-sub">// Задавайте вопросы напрямую по загруженным НПА</div>
+        <div class="ph-title" data-i18n="ph_chat">Чат с документами</div>
+        <div class="ph-sub" data-i18n="ph_chat_sub">// Задавайте вопросы напрямую по загруженным НПА</div>
       </div>
       <div class="cmsg-list" id="cmsg-list">
         <div class="cmsg ai">
           <div class="cav">⚖</div>
-          <div class="cbubble">Привет! Загрузите документы и задайте любой вопрос по нормативным актам. Я найду противоречия, объясню нормы и помогу разобраться в связях между законами.</div>
+          <div class="cbubble" data-i18n="chat_welcome">Привет! Загрузите документы и задайте любой вопрос по нормативным актам. Я найду противоречия, объясню нормы и помогу разобраться в связях между законами.</div>
         </div>
       </div>
       <div class="cinput-bar">
-        <textarea class="cinput" id="cinput" placeholder="Задайте вопрос по документам... (Enter — отправить)" rows="1" onkeydown="chatKey(event)"></textarea>
+        <textarea class="cinput" id="cinput" data-i18n-placeholder="chat_placeholder" placeholder="Задайте вопрос по документам... (Enter — отправить)" rows="1" onkeydown="chatKey(event)"></textarea>
         <button class="btn btn-c" onclick="sendChat()" style="align-self:flex-end;padding:10px 16px">→</button>
         <button class="btn btn-g" id="clear-chat-btn" onclick="clearChat()" style="align-self:flex-end;padding:10px 12px">✕</button>
       </div>
@@ -482,7 +488,8 @@ body::after{content:'';position:fixed;inset:0;background-image:radial-gradient(c
 // ─── STATE ───
 const S = {
   provider: 'mock',
-  keys: { alem: 'sk-C98N-HCoGr99V8eyY4yvKg' },
+  lang: 'ru',
+  keys: { alem: 'sk-C98N-HCoGr99V8eyY4yvKg', groq: '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' },
   docs: [],
   conflicts: [],
   obsData: [],
@@ -490,9 +497,106 @@ const S = {
   currentModal: null,
 };
 
+const I18N = {
+  kz: {
+    app_title:"ЗаңМетр", app_sub:"НҚА қайшылықтарын талдау", mock_mode:"Мок-режим",
+    docs_lbl:"Құжаттар", drop_lbl:"Сүйреңіз немесе басыңыз", online_base:"Онлайн база (Әділет, eGov)",
+    search_ph:"НҚА іздеу...", modules_lbl:"Талдау модульдері",
+    nav_conflicts:"<span class=\"ni-icon\">⚡</span> Қайшылықтар",
+    nav_obsolete:"<span class=\"ni-icon\">🗂</span> Ескірген нормалар",
+    nav_graph:"<span class=\"ni-icon\">🕸</span> Байланыс графы",
+    nav_chat:"<span class=\"ni-icon\">💬</span> Құжаттармен чат",
+    load_demo:"⚡ Демо-деректерді жүктеу",
+    ph_conflicts:"Қайшылықтарды талдау", ph_conflicts_sub:"// Құжаттар арасындағы қайшылықты және үйлесімсіз нормаларды іздеу",
+    opt_full:"Толық талдау", opt_conflicts:"Тек қайшылықтар", opt_obs:"Тек ескірген", opt_risk:"Құқықтық тәуекелдер",
+    btn_run:"▶ Іске қосу", btn_clear:"✕ Тазалау", btn_export:"📥 Экспорт",
+    empty_conflicts:"Құжаттарды жүктеп, талдауды бастаңыз<br>немесе бүйірлік тақтада «Демо-деректерді жүктеу» түймесін басыңыз",
+    ph_obs:"Ескірген нормалар", ph_obs_sub:"// Жаңартуды, жоюды немесе қайта қарауды қажет ететін ережелер",
+    btn_run_obs:"🔍 Ескіргендерді табу", ph_graph:"НҚА байланыс графы", ph_graph_sub:"// Нормативтік актілер арасындағы тәуелділіктердің интерактивті картасы",
+    btn_graph:"🕸 Граф құру", btn_graph_reset:"↺ Қалпына келтіру",
+    ph_chat:"Құжаттармен чат", ph_chat_sub:"// Жүктелген НҚА бойынша тікелей сұрақтар қойыңыз",
+    st_conflicts:"Қайшылықтар", st_obs:"Ескірген", st_links:"Байланыстар", st_docs:"Құжаттар", st_entropy:"Энтропия",
+    empty_obs:"Ескірген нормаларды іздеуді бастаңыз",
+    th_norm:"Норма / Тармак", th_doc:"Құжат", th_issue:"Мәселе", th_status:"Статус", th_rec:"Ұсыныс",
+    gl_law:"Заң", gl_decree:"Қаулы", gl_order:"Бұйрық", gl_conflict:"Қайшылық",
+    txt_analyzing: "Құжаттарды талдаудамыз...", step_prep: "Сұранысты дайындау", txt_finding: "Ескірген нормаларды іздеудеміз...", step_dates: "Күндер мен сілтемелерді талдау",
+    chat_welcome: "Сәлем! Құжаттарды жүктеп, нормативтік актілер бойынша кез келген сұрағыңызды қойыңыз. Мен қайшылықтарды тауып, нормаларды түсіндіремін және заңдар арасындағы байланыстарды ұғынуға көмектесемін.",
+    chat_placeholder: "Құжаттар бойынша сұрақ қойыңыз... (Жіберу үшін Enter)"
+  },
+  en: {
+    app_title:"Law Entropy", app_sub:"NPA Conflict Analyzer", mock_mode:"Mock Mode",
+    docs_lbl:"Documents", drop_lbl:"Drag and drop or click", online_base:"Online Base (Adilet, eGov)",
+    search_ph:"Search NPA...", modules_lbl:"Analysis Modules",
+    nav_conflicts:"<span class=\"ni-icon\">⚡</span> Conflicts",
+    nav_obsolete:"<span class=\"ni-icon\">🗂</span> Obsolete Norms",
+    nav_graph:"<span class=\"ni-icon\">🕸</span> Connections Graph",
+    nav_chat:"<span class=\"ni-icon\">💬</span> Document Chat",
+    load_demo:"⚡ Load Demo Data",
+    ph_conflicts:"Conflicts Analysis", ph_conflicts_sub:"// Search for conflicting and incompatible norms between documents",
+    opt_full:"Full Analysis", opt_conflicts:"Only Conflicts", opt_obs:"Only Obsolete", opt_risk:"Legal Risks",
+    btn_run:"▶ Run", btn_clear:"✕ Clear", btn_export:"📥 Export",
+    empty_conflicts:"Upload documents and run the analysis<br>or click «Load Demo Data» in the sidebar",
+    ph_obs:"Obsolete Norms", ph_obs_sub:"// Provisions requiring update, cancellation, or revision",
+    btn_run_obs:"🔍 Find Obsolete", ph_graph:"NPA Connections Graph", ph_graph_sub:"// Interactive map of dependencies between regulations",
+    btn_graph:"🕸 Build Graph", btn_graph_reset:"↺ Reset",
+    ph_chat:"Document Chat", ph_chat_sub:"// Ask questions directly about the uploaded documents",
+    st_conflicts:"Conflicts", st_obs:"Obsolete", st_links:"Links", st_docs:"Documents", st_entropy:"Entropy",
+    empty_obs:"Run obsolete norms search",
+    th_norm:"Norm / Item", th_doc:"Document", th_issue:"Issue", th_status:"Status", th_rec:"Recommendation",
+    gl_law:"Law", gl_decree:"Decree", gl_order:"Order", gl_conflict:"Conflict",
+    txt_analyzing: "Analyzing documents...", step_prep: "Preparing request", txt_finding: "Finding obsolete norms...", step_dates: "Analyzing dates and links",
+    chat_welcome: "Hi! Upload documents and ask any question about regulations. I will find conflicts, explain norms and help you understand connections between laws.",
+    chat_placeholder: "Ask a question about your documents... (Enter to send)"
+  }
+};
+
+const LANG_MAP = { ru: 'русском', kz: 'казахском', en: 'английском' };
+
+function changeLang(lang) {
+  S.lang = lang;
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (lang === 'ru') {
+      const orig = el.getAttribute('data-i18n-ru');
+      if (orig) el.innerHTML = orig;
+    } else {
+      if (!el.hasAttribute('data-i18n-ru')) el.setAttribute('data-i18n-ru', el.innerHTML);
+      if (I18N[lang] && I18N[lang][key]) el.innerHTML = I18N[lang][key];
+    }
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    if (lang === 'ru') {
+      const orig = el.getAttribute('data-i18n-ru-ph');
+      if (orig) el.placeholder = orig;
+    } else {
+      if (!el.hasAttribute('data-i18n-ru-ph')) el.setAttribute('data-i18n-ru-ph', el.placeholder);
+      if (I18N[lang] && I18N[lang][key]) el.placeholder = I18N[lang][key];
+    }
+  });
+
+  if (S.provider === 'mock') {
+    if (S.conflicts && S.conflicts.length) S.conflicts = JSON.parse(mockResponse('противоречия'));
+    if (S.obsData && S.obsData.length) S.obsData = JSON.parse(mockResponse('устаревш'));
+    if (window.getComputedStyle(document.getElementById('graph-wrap')).display !== 'none') {
+      const g = JSON.parse(mockResponse('граф'));
+      renderGraph(g.nodes, g.links);
+    }
+  }
+
+  if (S.conflicts && S.conflicts.length) renderConflicts(S.conflicts);
+  if (S.obsData && S.obsData.length) renderObs(S.obsData);
+}
+
 // ─── PROVIDER CONFIG ───
 const PROVIDERS = {
   mock: { name: 'Мок-режим', free: true },
+  groq: {
+    name: 'Groq (Llama 3)',
+    free: true,
+    info: '⚡ Быстрый инференс\nПолучить ключ: console.groq.com\nМодель: llama-3.3-70b-versatile',
+    placeholder: 'gsk_...',
+  },
   gemini: {
     name: 'Google Gemini',
     free: true,
@@ -564,44 +668,6 @@ dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
 dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('drag'); handleFiles(e.dataTransfer.files); });
 fi.addEventListener('change', e => handleFiles(e.target.files));
 
-async function handleFiles(files) {
-  for (const f of files) {
-    let txt = '';
-    const ext = f.name.split('.').pop().toLowerCase();
-    
-    try {
-      if (ext === 'pdf') {
-        const arrayBuffer = await f.arrayBuffer();
-        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-        let fullText = '';
-        for (let i = 1; i <= pdf.numPages; i++) {
-          const page = await pdf.getPage(i);
-          const content = await page.getTextContent();
-          fullText += content.items.map(item => item.str).join(' ') + '\n';
-        }
-        txt = fullText;
-      } else if (ext === 'docx' || ext === 'doc') {
-        const arrayBuffer = await f.arrayBuffer();
-        const result = await mammoth.extractRawText({ arrayBuffer });
-        txt = result.value;
-      } else {
-        txt = await f.text();
-      }
-      
-      if (txt.trim()) {
-        S.docs.push({ name: f.name, text: txt });
-      } else {
-        toast(`Файл ${f.name} пуст или не удалось прочитать текст`, 'warn');
-      }
-    } catch (e) {
-      console.error(e);
-      toast(`Ошибка при чтении ${f.name}: ` + e.message, 'err');
-    }
-  }
-  renderDocs();
-  toast(`Загружено: ${files.length} файл(ов)`, 'ok');
-}
-
 function openProviderModal(p) {
   S.currentModal = p;
   const pr = PROVIDERS[p];
@@ -650,7 +716,8 @@ async function extractMeta(doc) {
     return;
   }
   try {
-    const p = `Проанализируй первые 1000 символов документа и верни ТОЛЬКО JSON: { "date": "ГГГГ-ММ-ДД", "type": "Закон/Постановление/Приказ", "organ": "Кем принят", "title": "Название" }. Текст: ${doc.text.slice(0, 1000)}`;
+    const langNow = (typeof LANG_MAP !== 'undefined' && S.lang) ? LANG_MAP[S.lang] : 'русском';
+    const p = `Проанализируй первые 1000 символов документа и верни ТОЛЬКО JSON на ${langNow.toUpperCase()} языке: { "date": "ГГГГ-ММ-ДД", "type": "Закон/Постановление/Приказ", "organ": "Кем принят", "title": "Название" }. Текст: ${doc.text.slice(0, 1000)}`;
     const res = await callLLM(p);
     const meta = parseJSON(res);
     Object.assign(doc, meta);
@@ -798,6 +865,13 @@ async function callLLM(prompt) {
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
       data: { model: 'gpt-4o-mini', max_tokens: 2048, messages: [{ role: 'user', content: prompt }] }
     };
+  } else if (p === 'groq') {
+    proxyData = {
+      url: 'https://api.groq.com/openai/v1/chat/completions',
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+      data: { model: 'llama-3.3-70b-versatile', max_tokens: 4096, messages: [{ role: 'user', content: prompt }] }
+    };
   }
 
   // Use the proxy to avoid CORS
@@ -820,60 +894,112 @@ async function callLLM(prompt) {
 
 function parseJSON(text) {
   let clean = text.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+  
+  // Custom aggressive clean up for broken LLM JSONs:
+  const firstBracket = Math.min(clean.indexOf('[') !== -1 ? clean.indexOf('[') : Infinity, clean.indexOf('{') !== -1 ? clean.indexOf('{') : Infinity);
+  const lastBracket = Math.max(clean.lastIndexOf(']'), clean.lastIndexOf('}'));
+  if (firstBracket !== Infinity && lastBracket !== -1 && lastBracket > firstBracket) {
+    clean = clean.substring(firstBracket, lastBracket + 1);
+  }
+
   // direct parse
   try { return JSON.parse(clean); } catch {}
-  // extract [...] array
-  const arrM = clean.match(/\[[\s\S]*\]/);
-  if (arrM) { try { return JSON.parse(arrM[0]); } catch { try { return JSON.parse(arrM[0].replace(/,\s*([\]}])/g, "$1")); } catch {} } }
-  // extract {...} object (for graph)
-  const objM = clean.match(/\{[\s\S]*\}/);
-  if (objM) { try { return JSON.parse(objM[0]); } catch { try { return JSON.parse(objM[0].replace(/,\s*([\]}])/g, "$1")); } catch {} } }
-  // fix trailing commas and retry
-  const fixed = clean.replace(/,\s*([\]}])/g, "$1");
+  // fix trailing commas
+  let fixed = clean.replace(/,\s*([\]}])/g, "$1");
   try { return JSON.parse(fixed); } catch {}
-  throw new Error('Не удалось разобрать JSON ответ. Попробуйте ещё раз.');
+  
+  if (fixed.startsWith('[') && fixed.endsWith('}')) {
+    try { return JSON.parse(fixed + ']'); } catch {}
+  }
+  
+  const errDesc = S.lang === 'kz' ? 'JSON форматы бұзылған' : S.lang === 'en' ? 'Malformed JSON' : 'Не удалось разобрать JSON';
+  throw new Error(errDesc + '\\nТаза мәтін: ' + clean.substring(0, 100) + '...');
 }
 
 // ─── MOCK RESPONSE ───
 function mockResponse(prompt) {
+  const isKz = S.lang === 'kz';
+  const isEn = S.lang === 'en';
+
   if (prompt.includes('противоречия') || prompt.includes('АНАЛИЗ')) {
     return JSON.stringify([
-      { type:'conflict', severity:'high', title:'Конфликт норм о сверхурочной оплате', description:'Трудовой кодекс (ст. 46) требует оплату сверхурочных в размере 1.5× за первые 2 часа и 2× за последующие. Постановление №156 (п. 7) устанавливает единую ставку 1× вне зависимости от количества часов. Это прямое противоречие — нижестоящий акт ухудшает положение работника по сравнению с Кодексом.', articles:['Закон о труде, Ст. 46','Постановление №156, П. 7'], recommendation:'Привести Постановление №156 в соответствие с ТК РК. Норма Кодекса как вышестоящего акта имеет приоритет.' },
-      { type:'conflict', severity:'high', title:'Несоответствие в нормах ежегодного отпуска', description:'Трудовой кодекс устанавливает минимум 24 календарных дня отпуска (ст. 78). Постановление №156 (п. 12) устанавливает только 18 рабочих дней для госсектора. Приказ Минфин №89 рассчитывает компенсации исходя из 18 дней. Фактически работники госсектора лишаются части законного отпуска.', articles:['Закон о труде, Ст. 78','Постановление №156, П. 12','Приказ Минфин №89, Раздел 2'], recommendation:'Пересмотреть нормы отпуска в Постановлении. Пересчитать компенсации в Приказе Минфин.' },
-      { type:'obsolete', severity:'high', title:'Ссылка на утратившую силу форму ПТ-3/2015', description:'Приказ Минфин №89 (Раздел 6) обязывает использовать форму отчётности ПТ-3/2015, которая утратила силу с 01.01.2021. Это создаёт правовую неопределённость — работодатели не имеют актуальной формы для отчётности о переработках.', articles:['Приказ Минфин №89, Раздел 6'], recommendation:'Обновить ссылку на действующую форму отчётности или разработать новую.' },
-      { type:'obsolete', severity:'high', title:'Ссылка на закон об ОСС 2003 года (утратил силу)', description:'Приказ Минфин (Раздел 8) ссылается на Закон РК «Об обязательном социальном страховании» 2003 года, который заменён новым законом 2019 года. Расчёты социальных отчислений могут вестись по устаревшим нормативам.', articles:['Приказ Минфин №89, Раздел 8'], recommendation:'Заменить ссылку на действующий Закон РК об ОСС 2019 года.' },
-      { type:'conflict', severity:'medium', title:'Разные формы инструктажа по охране труда', description:'Трудовой кодекс (ст. 134) ссылается на форму ОТ-1/2019 для инструктажа, тогда как Постановление №156 (п. 22) предписывает использовать устаревшую форму ОТ-1/2012. Работодатели оказываются в ситуации двусмысленности.', articles:['Закон о труде, Ст. 134','Постановление №156, П. 22'], recommendation:'Актуализировать ссылки на нормативные формы. Издать разъяснительное письмо.' },
-      { type:'link', severity:'low', title:'Взаимосвязь норм об административной ответственности', description:'Трудовой кодекс (ст. 112) предусматривает ответственность по ст. 87-92 КоАП, тогда как Постановление №156 (п. 15) допускает взыскания без согласования с профсоюзом. Возникает вопрос о применимости профсоюзных норм в госсекторе.', articles:['Закон о труде, Ст. 112','Постановление №156, П. 15'], recommendation:'Уточнить применимость требования о согласовании с профсоюзом в госсекторе.' },
+      { type:'conflict', severity:'high', 
+        title: isKz ? 'Үстеме жұмыс ақысы бойынша қақтығыс' : isEn ? 'Conflict on overtime pay' : 'Конфликт норм о сверхурочной оплате', 
+        description: isKz ? 'Еңбек кодексі (46-бап) үстеме жұмысты алғашқы 2 сағатқа 1.5 есе, ал кейінгі сағаттарға 2 есе мөлшерінде төлеуді талап етеді. №156 Қаулы (7-тармақ) бірыңғай 1 есе мөлшерлемені белгілейді. Бұл тікелей қайшылық.' : isEn ? 'Labor Code requires 1.5x and 2x overtime rates, whereas Decree No.156 mandates 1x fixed rate.' : 'Трудовой кодекс (ст. 46) требует оплату сверхурочных в размере 1.5× за первые 2 часа и 2× за последующие. Постановление №156 (п. 7) устанавливает единую ставку 1×.', 
+        articles:['Закон о труде, Ст. 46','Постановление №156, П. 7'], 
+        recommendation: isKz ? 'Қаулыны Еңбек кодексіне сәйкестендіру.' : isEn ? 'Align Decree with Labor Code requirements.' : 'Привести Постановление №156 в соответствие с ТК РК.' },
+      { type:'conflict', severity:'high', 
+        title: isKz ? 'Жыл сайынғы демалыс нормаларындағы сәйкессіздік' : isEn ? 'Mismatch in annual leave norms' : 'Несоответствие в нормах ежегодного отпуска', 
+        description: isKz ? 'Еңбек кодексі кем дегенде 24 күнтізбелік күнді талап етеді, ал №156 Қаулы мемлекеттік сектор үшін тек 18 жұмыс күнін белгілейді.' : isEn ? 'Labor code requires 24 days, Decree stipulates 18 days.' : 'Трудовой кодекс устанавливает минимум 24 календарных дня отпуска (ст. 78). Постановление №156 (п. 12) устанавливает только 18 рабочих дней для госсектора.', 
+        articles:['Закон о труде, Ст. 78','Постановление №156, П. 12','Приказ Минфин №89, Раздел 2'], 
+        recommendation: isKz ? 'Қаулыдағы демалыс нормаларын қайта қарау.' : isEn ? 'Revise leave norms in the Decree.' : 'Пересмотреть нормы отпуска в Постановлении. Пересчитать компенсации в Приказе Минфин.' },
+      { type:'obsolete', severity:'high', 
+        title: isKz ? 'ПТ-3/2015 күшін жойған нысанына сілтеме' : isEn ? 'Reference to obsolete form PT-3/2015' : 'Ссылка на утратившую силу форму ПТ-3/2015', 
+        description: isKz ? 'Қаржыминінің №89 бұйрығы (6-бөлім) 01.01.2021 ж. күшін жойған ПТ-3/2015 нысанын пайдалануды міндеттейді.' : isEn ? 'Ministry of Finance command requires defunct form PT-3/2015.' : 'Приказ Минфин №89 обязывает использовать форму отчётности ПТ-3/2015, которая утратила силу с 01.01.2021.', 
+        articles:['Приказ Минфин №89, Раздел 6'], 
+        recommendation: isKz ? 'Жаңа нысанға сілтемені жаңарту.' : isEn ? 'Update reference to current form.' : 'Обновить ссылку на действующую форму отчётности.' },
+      { type:'obsolete', severity:'high', 
+        title: isKz ? '2003 жылғы МӘС туралы заңға сілтеме (күшін жойды)' : isEn ? 'Reference to 2003 Social Insurance Law (repealed)' : 'Ссылка на закон об ОСС 2003 года (утратил силу)', 
+        description: isKz ? 'Қаржыминінің бұйрығы 2019 жылғы жаңа заңмен ауыстырылған 2003 жылғы заңға сілтеме жасайды.' : isEn ? 'Order refers to repealed 2003 law instead of 2019 active law.' : 'Приказ Минфин (Раздел 8) ссылается на Закон РК «Об обязательном социальном страховании» 2003 года, который заменён новым законом 2019 года.', 
+        articles:['Приказ Минфин №89, Раздел 8'], 
+        recommendation: isKz ? 'Сілтемені 2019 жылғы заңға ауыстыру.' : isEn ? 'Replace reference with 2019 Law.' : 'Заменить ссылку на действующий Закон РК об ОСС 2019 года.' },
+      { type:'conflict', severity:'medium', 
+        title: isKz ? 'Еңбекті қорғау бойынша нұсқаманың әртүрлі нысандары' : isEn ? 'Different forms of occupational safety briefing' : 'Разные формы инструктажа по охране труда', 
+        description: isKz ? 'Кодекс ОТ-1/2019 нысанына сілтеме жасайды, ал №156 Қаулы ескірген ОТ-1/2012 нысанын пайдалануды бұйырады.' : isEn ? 'Code refers to 2019 form, Decree refers to 2012 form.' : 'Трудовой кодекс (ст. 134) ссылается на форму ОТ-1/2019 для инструктажа, тогда как Постановление №156 (п. 22) предписывает использовать устаревшую форму ОТ-1/2012.', 
+        articles:['Закон о труде, Ст. 134','Постановление №156, П. 22'], 
+        recommendation: isKz ? 'Нормативтік нысандарға сілтемелерді жаңарту.' : isEn ? 'Update references to normative forms.' : 'Актуализировать ссылки на нормативные формы.' },
+      { type:'link', severity:'low', 
+        title: isKz ? 'Әкімшілік жауапкершілік нормаларының өзара байланысы' : isEn ? 'Interconnection of administrative liability norms' : 'Взаимосвязь норм об административной ответственности', 
+        description: isKz ? 'Кодекс кәсіподақтың келісімін талап етеді, ал Қаулы мемсекторда келісімсіз өндіріп алуға рұқсат береді.' : isEn ? 'Code requires union consent, Decree allows collection without consent in state sector.' : 'Трудовой кодекс (ст. 112) предусматривает ответственность по ст. 87-92 КоАП, тогда как Постановление №156 (п. 15) допускает взыскания без согласования с профсоюзом.', 
+        articles:['Закон о труде, Ст. 112','Постановление №156, П. 15'], 
+        recommendation: isKz ? 'Мемсектордағы қолданылуын нақтылау.' : isEn ? 'Clarify applicability in the public sector.' : 'Уточнить применимость требования о согласовании с профсоюзом.' }
     ]);
   }
   if (prompt.includes('устаревш') || prompt.includes('obsolete')) {
     return JSON.stringify([
-      { norm:'Форма ПТ-3/2015 (обязательная отчётность)', doc:'Приказ Минфин №89, Раздел 6', issue:'Форма утратила силу с 01.01.2021 (Приказ МФ №12 от 2020 г.), однако ссылка на неё сохраняется в действующем документе', status:'replaced', recommendation:'Использовать актуальную форму или запросить разъяснение в Минфин' },
-      { norm:'Закон об ОСС 2003 года', doc:'Приказ Минфин №89, Раздел 8', issue:'Закон полностью заменён новым Законом РК об обязательном социальном страховании 2019 года с изменёнными ставками', status:'replaced', recommendation:'Обновить ссылку на закон 2019 года, пересчитать нормативы' },
-      { norm:'Форма ОТ-1/2012 (инструктаж по ОТ)', doc:'Постановление №156, П. 22', issue:'Устаревшая форма инструктажа по охране труда. Действующий кодекс ссылается на форму ОТ-1/2019', status:'replaced', recommendation:'Перейти на форму ОТ-1/2019 согласно требованиям ТК' },
-      { norm:'18 рабочих дней отпуска для госсектора', doc:'Постановление №156, П. 12', issue:'Норма не соответствует требованиям ТК РК о минимуме 24 календарных дней. Требует пересмотра', status:'partial', recommendation:'Привести в соответствие с нормами ТК, перейти на исчисление в календарных днях' },
-      { norm:'Единая ставка 1× для сверхурочных', doc:'Постановление №156, П. 7', issue:'Противоречит требованиям ТК о дифференцированной оплате сверхурочных (1.5× и 2×)', status:'review', recommendation:'Пересмотреть нормы оплаты труда в Постановлении' },
+      { norm:'Форма ПТ-3/2015 (обязательная отчётность)', doc:'Приказ Минфин №89, Раздел 6', 
+        issue: isKz ? 'Нысан 01.01.2021 ж. күшін жойған, бірақ сілтеме әлі бар.' : isEn ? 'Form replaced in 2021.' : 'Форма утратила силу с 01.01.2021.', 
+        status:'replaced', 
+        recommendation: isKz ? 'Актуальды нысанды пайдалану.' : isEn ? 'Use current form.' : 'Использовать актуальную форму' },
+      { norm:'Закон об ОСС 2003 года', doc:'Приказ Минфин №89, Раздел 8', 
+        issue: isKz ? 'Заң 2019 жылғы жаңа заңмен ауыстырылды.' : isEn ? 'Law replaced in 2019.' : 'Закон полностью заменён новым Законом РК об обязательном социальном страховании 2019 года', 
+        status:'replaced', 
+        recommendation: isKz ? 'Сілтемені жаңарту.' : isEn ? 'Update base reference.' : 'Обновить ссылку на закон 2019 года' },
+      { norm:'Форма ОТ-1/2012 (инструктаж по ОТ)', doc:'Постановление №156, П. 22', 
+        issue: isKz ? 'Ескірген нұсқама нысаны.' : isEn ? 'Obsolete form.' : 'Устаревшая форма инструктажа по охране труда.', 
+        status:'replaced', 
+        recommendation: isKz ? 'ОТ-1/2019 нысанына өту.' : isEn ? 'Migrate to 2019 form.' : 'Перейти на форму ОТ-1/2019' },
+      { norm:'18 рабочих дней отпуска для госсектора', doc:'Постановление №156, П. 12', 
+        issue: isKz ? 'Норма Еңбек кодексіндегі 24 күндік талапқа сәйкес келмейді.' : isEn ? 'Norm contradicts 24 days code rule.' : 'Норма не соответствует требованиям ТК РК о минимуме 24 календарных дней.', 
+        status:'partial', 
+        recommendation: isKz ? 'Еңбек кодексімен сәйкестендіру.' : isEn ? 'Align with labor code.' : 'Привести в соответствие с нормами ТК' },
+      { norm:'Единая ставка 1× для сверхурочных', doc:'Постановление №156, П. 7', 
+        issue: isKz ? 'Үстеме жұмысты саралай төлеу туралы ЕК талабына қайшы келеді.' : isEn ? 'Contradicts code overtime requirements.' : 'Противоречит требованиям ТК о дифференцированной оплате сверхурочных', 
+        status:'review', 
+        recommendation: isKz ? 'Қаулыдағы төлеу нормаларын қайта қарау.' : isEn ? 'Revise labor payment norms.' : 'Пересмотреть нормы оплаты труда в Постановлении' }
     ]);
   }
   if (prompt.includes('граф') || prompt.includes('graph')) {
     return JSON.stringify({
       nodes: [
-        { id:'n0', label:'Трудовой кодекс РК', type:'law' },
-        { id:'n1', label:'Постановление МТ №156', type:'decree' },
-        { id:'n2', label:'Приказ Минфин №89', type:'order' },
-        { id:'n3', label:'КоАП РК', type:'law' },
-        { id:'n4', label:'Закон об ОСС 2019', type:'law' },
+        { id:'n0', label: isKz ? 'ҚР Еңбек кодексі' : isEn ? 'Labor Code' : 'Трудовой кодекс РК', type:'law' },
+        { id:'n1', label: isKz ? '№156 Еңбекмин қаулысы' : isEn ? 'Decree No.156' : 'Постановление МТ №156', type:'decree' },
+        { id:'n2', label: isKz ? '№89 Қаржымин бұйрығы' : isEn ? 'Order No.89' : 'Приказ Минфин №89', type:'order' },
+        { id:'n3', label: isKz ? 'ҚР ӘҚБтК' : isEn ? 'Administrative Code' : 'КоАП РК', type:'law' },
+        { id:'n4', label: isKz ? '2019 МӘС заңы' : isEn ? '2019 Social Law' : 'Закон об ОСС 2019', type:'law' },
       ],
       links: [
-        { source:'n0', target:'n1', label:'противоречит', conflict:true },
-        { source:'n0', target:'n3', label:'ссылается', conflict:false },
-        { source:'n1', target:'n2', label:'конфликт отпуск', conflict:true },
-        { source:'n2', target:'n4', label:'устарела ссылка', conflict:true },
-        { source:'n0', target:'n2', label:'регулирует', conflict:false },
+        { source:'n0', target:'n1', label: isKz ? 'қайшылық' : 'противоречит', conflict:true },
+        { source:'n0', target:'n3', label: isKz ? 'сілтеме' : 'ссылается', conflict:false },
+        { source:'n1', target:'n2', label: isKz ? 'демалыс қақтығысы' : 'конфликт отпуск', conflict:true },
+        { source:'n2', target:'n4', label: isKz ? 'ескірген сілтеме' : 'устарела ссылка', conflict:true },
+        { source:'n0', target:'n2', label: isKz ? 'реттейді' : 'регулирует', conflict:false },
       ],
     });
   }
   // chat fallback
+  if (isKz) return 'Жүктелген құжаттар негізінде Еңбек кодексі мен №156 Қаулы арасында үстеме жұмыс ақысы (Кодекс 1.5 есе талап етеді, Қаулы — 1 есе) және демалыс нормалары бойынша қайшылықтар анықталды. Толық талдау үшін соответствующая қосымшаны пайдаланыңыз.';
+  if (isEn) return 'Based on the uploaded documents, conflicts exist between the Labor Code and Decree No.156 regarding overtime pay and annual leave norms. Please use the analysis tab for full details.';
   return 'На основе загруженных документов: обнаружены противоречия между Трудовым кодексом и Постановлением №156 в части оплаты сверхурочных (ТК требует 1.5× и 2×, постановление — 1×) и норм отпуска (24 календарных vs 18 рабочих дней). Приказ Минфин содержит ссылки на два утративших силу нормативных акта. Рекомендую начать с анализа противоречий через соответствующую вкладку.';
 }
 
@@ -894,24 +1020,59 @@ async function runConflicts() {
   document.getElementById('run-btn').disabled = true;
 
   const modeLabels = { full:'Полный анализ', conflicts:'Противоречия', obsolete:'Устаревшие нормы', risk:'Правовые риски' };
-  const timer = startSteps(['Загрузка документов...','Анализ норм...','Поиск конфликтов...','Формирование отчёта...'], 'lstep');
+  const stepsKz = ['Құжаттарды жүктеу...','Нормаларды талдау...','Қайшылықтарды іздеу...','Есеп жасау...'];
+  const stepsEn = ['Loading documents...','Analyzing norms...','Searching conflicts...','Generating report...'];
+  const stepsRu = ['Загрузка документов...','Анализ норм...','Поиск конфликтов...','Формирование отчёта...'];
+  const timer = startSteps(S.lang === 'kz' ? stepsKz : S.lang === 'en' ? stepsEn : stepsRu, 'lstep');
 
   const docsStr = S.docs.map((d,i)=>`=== Документ ${i+1}: ${d.name} ===\n${d.text.slice(0,2500)}`).join('\n\n');
-  const modeHint = {
-    full: 'противоречия, устаревшие ссылки, правовые риски и связи между нормами',
-    conflicts: 'только прямые противоречия и несоответствия между нормами',
-    obsolete: 'только устаревшие нормы, ссылки на отменённые акты и неактуальные формы',
-    risk: 'правовые риски и уязвимости для организаций',
-  };
-
-  const prompt = `Ты — эксперт по анализу нормативно-правовых актов. Найди: ${modeHint[mode]}.
+  let prompt = '';
+  if (S.lang === 'kz') {
+    const modeHint = {
+      full: 'қайшылықтарды, ескірген сілтемелерді, құқықтық тәуекелдерді және нормалар арасындағы байланыстарды',
+      conflicts: 'тек тікелей қайшылықтарды және нормалар арасындағы сәйкессіздіктерді',
+      obsolete: 'тек ескірген нормаларды, жойылған актілерге сілтемелерді және өзекті емес нысандарды',
+      risk: 'ұйымдар үшін құқықтық тәуекелдер мен осалдықтарды',
+    };
+    prompt = `Сен — нормативтік-құқықтық актілерді талдау сарапшысың. Мынаны тап: ${modeHint[mode]}.
 
 ${docsStr}
 
-Верни ТОЛЬКО JSON-массив без markdown и \`\`\`. Каждый элемент:
-{"type":"conflict|obsolete|link|risk","severity":"high|medium|low","title":"краткое название до 80 символов","description":"детальное объяснение на русском 2-4 предложения","articles":["Документ, Норма"],"recommendation":"конкретная рекомендация"}
+Маған ТЕК JSON-массив қайтар, ешқандай markdown және \`\`\` белгілерінсіз. Жауаптың мәтіні МІНДЕТТІ ТҮРДЕ ҚАЗАҚ ТІЛІНДЕ болуы керек. Әр элементтің форматы:
+{"type":"conflict|obsolete|link|risk","severity":"high|medium|low","title":"80 таңбаға дейінгі қысқаша атауы","description":"2-4 сөйлемнен тұратын толық түсіндірме","articles":["Құжат, Норма"],"recommendation":"нақты ұсыныс"}
+
+Ең маңызды 5-8 мәселені тап.`;
+  } else if (S.lang === 'en') {
+    const modeHint = {
+      full: 'conflicts, obsolete references, legal risks and connections between norms',
+      conflicts: 'only direct conflicts and inconsistencies between norms',
+      obsolete: 'only obsolete norms, references to repealed acts and outdated forms',
+      risk: 'legal risks and vulnerabilities for organizations',
+    };
+    prompt = `You are an expert in analyzing legal documents. Find: ${modeHint[mode]}.
+
+${docsStr}
+
+Return ONLY a JSON array without markdown and \`\`\`. The response text MUST BE STRICTLY IN ENGLISH. Each element format:
+{"type":"conflict|obsolete|link|risk","severity":"high|medium|low","title":"short title up to 80 chars","description":"detailed explanation 2-4 sentences","articles":["Document, Norm"],"recommendation":"specific recommendation"}
+
+Find the 5-8 most significant problems.`;
+  } else {
+    const modeHint = {
+      full: 'противоречия, устаревшие ссылки, правовые риски и связи между нормами',
+      conflicts: 'только прямые противоречия и несоответствия между нормами',
+      obsolete: 'только устаревшие нормы, ссылки на отменённые акты и неактуальные формы',
+      risk: 'правовые риски и уязвимости для организаций',
+    };
+    prompt = `Ты — эксперт по анализу нормативно-правовых актов. Найди: ${modeHint[mode]}.
+
+${docsStr}
+
+Верни ТОЛЬКО JSON-массив без markdown и \`\`\`. Ответ ДОЛЖЕН БЫТЬ СТРОГО НА РУССКОМ ЯЗЫКЕ. Каждый элемент:
+{"type":"conflict|obsolete|link|risk","severity":"high|medium|low","title":"краткое название до 80 символов","description":"детальное объяснение 2-4 предложения","articles":["Документ, Норма"],"recommendation":"конкретная рекомендация"}
 
 Найди 5-8 наиболее значимых проблем.`;
+  }
 
   try {
     const raw = await callLLM(prompt);
@@ -934,6 +1095,8 @@ ${docsStr}
 function renderConflicts(items) {
   const map = { conflict:'conflict', obsolete:'obsolete', link:'link', risk:'risk' };
   const tags = { conflict:'ПРОТИВОРЕЧИЕ', obsolete:'УСТАРЕЛО', link:'СВЯЗЬ', risk:'РИСК' };
+  if(S.lang==='kz') { tags.conflict='ҚАЙШЫЛЫҚ'; tags.obsolete='ЕСКІРГЕН'; tags.link='БАЙЛАНЫС'; tags.risk='ТӘУЕКЕЛ'; }
+  if(S.lang==='en') { tags.conflict='CONFLICT'; tags.obsolete='OBSOLETE'; tags.link='LINK'; tags.risk='RISK'; }
   const sevCls = { high:'h', medium:'m', low:'l' };
   document.getElementById('rlist').innerHTML = items.map((r,i) => `
     <div class="rcard">
@@ -1021,14 +1184,35 @@ async function runObsolete() {
   document.getElementById('obs-run-btn').disabled = true;
 
   const docsStr = S.docs.map((d,i)=>`=== ${d.name} ===\n${d.text.slice(0,2500)}`).join('\n\n');
-  const prompt = `Ты — эксперт по нормативному праву. Найди ВСЕ устаревшие нормы, ссылки на отменённые/утратившие силу акты, недействующие формы документов и устаревшие процедуры.
+  let prompt = '';
+  if (S.lang === 'kz') {
+    prompt = `Сен — нормативтік құқық сарапшысың. БАРЛЫҚ ескірген нормаларды, күшін жойған актілерге сілтемелерді, жарамсыз құжат нысандарын және ескірген рәсімдерді тап.
 
 ${docsStr}
 
-Верни ТОЛЬКО JSON-массив без markdown:
+МАҒАН ТЕК JSON-массив қайтар, markdown-сыз. Жауап (JSON ішіндегі мәтін) ҚАТАҢ ТҮРДЕ ҚАЗАҚ ТІЛІНДЕ болуы керек:
+[{"norm":"норма немесе тармақ атауы","doc":"қайнар көз","issue":"мәселе неде","status":"replaced|partial|review","recommendation":"не істеу керек"}]
+
+4-7 позиция тап.`;
+  } else if (S.lang === 'en') {
+    prompt = `You are an expert in regulatory law. Find ALL obsolete norms, references to repealed/invalidated acts, invalid document forms, and outdated procedures.
+
+${docsStr}
+
+Return ONLY a JSON array without markdown. The response (text inside JSON) MUST BE STRICTLY IN ENGLISH:
+[{"norm":"norm or item name","doc":"source","issue":"what is the problem","status":"replaced|partial|review","recommendation":"what to do"}]
+
+Find 4-7 positions.`;
+  } else {
+    prompt = `Ты — эксперт по нормативному праву. Найди ВСЕ устаревшие нормы, ссылки на отменённые/утратившие силу акты, недействующие формы документов и устаревшие процедуры.
+
+${docsStr}
+
+Верни ТОЛЬКО JSON-массив без markdown. Ответ (текст внутри JSON) ДОЛЖЕН БЫТЬ СТРОГО НА РУССКОМ ЯЗЫКЕ:
 [{"norm":"название нормы или пункта","doc":"источник","issue":"в чём проблема","status":"replaced|partial|review","recommendation":"что сделать"}]
 
 Найди 4-7 позиций.`;
+  }
 
   try {
     const raw = await callLLM(prompt);
@@ -1050,6 +1234,8 @@ ${docsStr}
 function renderObs(items) {
   const sc = { replaced:'replaced', partial:'partial', review:'review' };
   const sl = { replaced:'ЗАМЕНЕНА', partial:'ЧАСТИЧНО', review:'ПЕРЕСМОТР' };
+  if(S.lang==='kz') { sl.replaced='АУЫСТЫРЫЛДЫ'; sl.partial='ЖАРТЫЛАЙ'; sl.review='ҚАЙТА ҚАРАУ'; }
+  if(S.lang==='en') { sl.replaced='REPLACED'; sl.partial='PARTIAL'; sl.review='REVIEW'; }
   document.getElementById('obs-body').innerHTML = items.map(r=>`
     <tr>
       <td style="color:var(--txtb);font-weight:500">${r.norm}</td>
@@ -1077,10 +1263,23 @@ async function buildGraph() {
 
   if (S.docs.length > 0) {
     const docsStr = S.docs.map((d,i)=>`Документ ${i+1}: ${d.name}\n${d.text.slice(0,1500)}`).join('\n\n');
-    const prompt = `Построй граф связей между нормативными документами. Верни ТОЛЬКО JSON:
+    let prompt = '';
+    if (S.lang === 'kz') {
+      prompt = `Нормативтік құжаттар арасындағы байланыс грахын құру. ТЕК JSON қайтар. Жауап (label өрістері) МІНДЕТТІ ТҮРДЕ ҚАЗАҚ ТІЛІНДЕ болуы керек:
+{"nodes":[{"id":"n0","label":"Атауы","type":"law|decree|order"}],"links":[{"source":"n0","target":"n1","label":"байланыс түрі","conflict":true}]}
+
+${docsStr}`;
+    } else if (S.lang === 'en') {
+      prompt = `Build a connection graph between regulatory documents. Return ONLY JSON. The response (label fields) MUST BE STRICTLY IN ENGLISH:
+{"nodes":[{"id":"n0","label":"Title","type":"law|decree|order"}],"links":[{"source":"n0","target":"n1","label":"connection type","conflict":true}]}
+
+${docsStr}`;
+    } else {
+      prompt = `Построй граф связей между нормативными документами. Верни ТОЛЬКО JSON. Ответ (поля label) ДОЛЖЕН БЫТЬ СТРОГО НА РУССКОМ ЯЗЫКЕ:
 {"nodes":[{"id":"n0","label":"Название","type":"law|decree|order"}],"links":[{"source":"n0","target":"n1","label":"тип","conflict":true}]}
 
 ${docsStr}`;
+    }
     try {
       const raw = await callLLM(prompt);
       const g = parseJSON(raw);
@@ -1090,17 +1289,8 @@ ${docsStr}`;
 
   if (!nodes.length) {
     // demo graph
-    nodes = [
-      {id:'n0',label:'Трудовой кодекс',type:'law'},
-      {id:'n1',label:'Постановление МТ',type:'decree'},
-      {id:'n2',label:'Приказ Минфин',type:'order'},
-      {id:'n3',label:'КоАП РК',type:'law'},
-    ];
-    links = [
-      {source:'n0',target:'n1',label:'противоречит',conflict:true},
-      {source:'n0',target:'n3',label:'ссылается',conflict:false},
-      {source:'n1',target:'n2',label:'конфликт',conflict:true},
-    ];
+    const g = JSON.parse(mockResponse('граф'));
+    nodes = g.nodes; links = g.links;
   }
 
   renderGraph(nodes, links);
@@ -1166,8 +1356,19 @@ async function sendChat() {
   S.chat.push({ role:'user', content:text });
 
   const thinking = addThinking();
-  const docsCtx = S.docs.length > 0 ? 'Документы для анализа:\n' + S.docs.map(d=>`[${d.name}]\n${d.text.slice(0,1500)}`).join('\n\n') + '\n\nОтвечай точно по этим документам, цитируй статьи и пункты.\n\n' : '';
-  const sysCtx = docsCtx + 'Ты — эксперт по нормативно-правовым актам. Отвечай профессионально на русском.';
+  let docsCtx = '';
+  let sysCtx = '';
+  if (S.lang === 'kz') {
+    if (S.docs.length > 0) docsCtx = 'Талдауға арналған құжаттар:\n' + S.docs.map(d=>`[${d.name}]\n${d.text.slice(0,1500)}`).join('\n\n') + '\n\nОсы құжаттар бойынша дәл жауап бер, мақалалар мен тармақтарға сілтеме жаса.\n\n';
+    sysCtx = docsCtx + 'Сен — нормативтік-құқықтық актілер сарапшысың. МІНДЕТТІ ТҮРДЕ ҚАЗАҚ ТІЛІНДЕ кәсіби жауап бер.';
+  } else if (S.lang === 'en') {
+    if (S.docs.length > 0) docsCtx = 'Documents for analysis:\n' + S.docs.map(d=>`[${d.name}]\n${d.text.slice(0,1500)}`).join('\n\n') + '\n\nAnswer precisely using these documents, quote articles and clauses.\n\n';
+    sysCtx = docsCtx + 'You are an expert in regulatory documents. Answer professionally and STRICTLY IN ENGLISH.';
+  } else {
+    if (S.docs.length > 0) docsCtx = 'Документы для анализа:\n' + S.docs.map(d=>`[${d.name}]\n${d.text.slice(0,1500)}`).join('\n\n') + '\n\nОтвечай точно по этим документам, цитируй статьи и пункты.\n\n';
+    sysCtx = docsCtx + 'Ты — эксперт по нормативно-правовым актам. Отвечай профессионально строго на РУССКОМ языке.';
+  }
+  
   const prompt = sysCtx + '\n\n' + S.chat.map(m=>`${m.role==='user'?'Вопрос':'Ответ'}: ${m.content}`).join('\n') + '\nОтвет:';
 
   try {
@@ -1234,9 +1435,38 @@ function showEmpty(scope) {
   else document.getElementById('obs-empty').style.display = '';
 }
 
+function translateToast(msg) {
+  if (S.lang === 'ru') return msg;
+  const isKz = S.lang === 'kz';
+
+  const dict = {
+    "Введите API ключ": isKz ? "API кілтін енгізіңіз" : "Please enter API key",
+    "Загрузите хотя бы один документ": isKz ? "Кем дегенде бір құжатты жүктеңіз" : "Upload at least one document",
+    "Загрузите документы": isKz ? "Құжаттарды жүктеңіз" : "Please upload documents",
+    "Текст документа пуст": isKz ? "Құжат мәтіні бос" : "Document text is empty",
+    "Документ успешно импортирован": isKz ? "Құжат сәтті импортталды" : "Document imported successfully",
+    "Данные недоступны": isKz ? "Деректер қолжетімсіз" : "Data unavailable",
+  };
+  if (dict[msg]) return dict[msg];
+  
+  let m;
+  if ((m = msg.match(/^Загружено:\s*(\d+)\s*файл\(ов\)$/))) return isKz ? `Жүктелді: ${m[1]} файл` : `Loaded: ${m[1]} file(s)`;
+  if ((m = msg.match(/^Демо-данные загружены:\s*(\d+)\s*документа$/))) return isKz ? `Демо-деректер жүктелді: ${m[1]} құжат` : `Demo data loaded: ${m[1]} documents`;
+  if ((m = msg.match(/^Найдено:\s*(\d+)\s*результатов$/))) return isKz ? `Табылды: ${m[1]} нәтиже` : `Found: ${m[1]} results`;
+  if ((m = msg.match(/^Найдено устаревших:\s*(\d+)$/))) return isKz ? `Ескірген нормалар табылды: ${m[1]}` : `Obsolete norms found: ${m[1]}`;
+  if ((m = msg.match(/^Ошибка:\s*(.*)$/))) return (isKz ? `Қате: ` : `Error: `) + m[1];
+  if ((m = msg.match(/^Ошибка импорта:\s*(.*)$/))) return (isKz ? `Импорт қатесі: ` : `Import error: `) + m[1];
+  if ((m = msg.match(/^Ошибка при чтении (.*):\s*(.*)$/))) return (isKz ? `Оқу қатесі ` : `Error reading `) + `${m[1]}: ${m[2]}`;
+  if ((m = msg.match(/^Загрузка\s+"(.*)"\s*\.\.\.$/))) return isKz ? `Жүктелуде "${m[1]}"...` : `Loading "${m[1]}"...`;
+  if ((m = msg.match(/^Файл (.*) пуст или не удалось прочитать текст$/))) return isKz ? `${m[1]} файлы бос` : `${m[1]} is empty`;
+  if (msg.endsWith(" подключён")) return msg.replace(" подключён", "") + (isKz ? " қосылды" : " connected");
+
+  return msg;
+}
+
 function toast(msg, type='') {
   const t = document.getElementById('toast');
-  t.textContent = msg;
+  t.textContent = translateToast(msg);
   t.className = 'toast' + (type?' '+type:'') + ' show';
   setTimeout(()=>t.classList.remove('show'), 5000);
 }
