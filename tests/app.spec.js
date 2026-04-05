@@ -8,8 +8,8 @@ test.describe('Law Entropy App', () => {
   });
 
   test('should load the page correctly', async ({ page }) => {
-    await expect(page).toHaveTitle(/ЗаконоМетр/);
-    await expect(page.locator('.brand-logo')).toContainText('ЗаконоМетр');
+    await expect(page).toHaveTitle(/Law Entropy/);
+    await expect(page.locator('.brand-logo')).toContainText('Law Entropy');
   });
 
   test('should load demo data and show stats with entropy index', async ({ page }) => {
