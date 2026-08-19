@@ -55,7 +55,7 @@ The easiest way to run the project is via Docker Compose. It spins up both the N
 npm install
 npm start
 ```
-Сервер будет доступен на порту 3000.
+The server will be accessible on port 3000.
 
 ### 2. Backend Engine (Python)
 ```bash
